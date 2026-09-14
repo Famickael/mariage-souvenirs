@@ -395,7 +395,9 @@ async function appel(payload){
     if (corps.length > 6000) throw new Error('message trop long pour ce navigateur, raccourcissez-le');
     r = await fetch(CONFIG.SCRIPT_URL + '?q=' + encodeURIComponent(corps));
   }
-  let data; try { data = await r.json(); } catch { throw new Error('réponse serveur illisible'); }
+  const texte = await r.text();
+  let data; try { data = JSON.parse(texte); }
+  catch { throw new Error('réponse serveur illisible (' + r.status + ') : ' + texte.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,160)); }
   if (!data.ok) throw new Error(data.error || 'erreur serveur');
   return data;
 }
