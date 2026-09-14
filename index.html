@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aude et Jérémie – Vos photos et vidéos pour la soirée</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cookie&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f3eee8; --paper-deep:#e9e1d8; --ink:#2b2727; --ink-soft:#6b625e;
+  --wine:#8c2a38; --wine-deep:#6a1e2a; --leaf:#c9b59a; --blush:#d98c93; --line:#d9cfc4;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:"Cormorant Garamond",Georgia,serif;font-size:19px;line-height:1.5}
+body{background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);background-size:5px 5px}
+.wrap{max-width:640px;margin:0 auto;padding:40px 20px 80px}
+.script{font-family:"Cookie",cursive;color:var(--wine);font-weight:400;line-height:1}
+.caps{font-variant:small-caps;letter-spacing:.06em}
+h1.script{font-size:clamp(56px,11vw,84px);text-align:center;margin:26px 0 6px}
+h2.script{font-size:42px;margin:0 0 6px}
+p{margin:0 0 12px}
+.center{text-align:center}
+.muted{color:var(--ink-soft)}
+a{color:var(--wine)}
+button{font:inherit;cursor:pointer}
+/* Octogone photo */
+.octo-wrap{position:relative;width:260px;height:260px;margin:10px auto 0}
+.octo{width:100%;height:100%;background:var(--wine);clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%);padding:4px}
+.octo .inner{width:100%;height:100%;clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%);background:var(--paper) url("") center/cover;display:flex;align-items:center;justify-content:center}
+.octo .inner.empty{background:var(--paper-deep)}
+.octo .mono{font-family:"Cookie",cursive;font-size:74px;color:var(--wine);line-height:1}
+.sprig{position:absolute;width:150px;height:150px;pointer-events:none}
+.sprig.tl{top:-58px;left:-64px}
+.sprig.br{bottom:-56px;right:-66px;transform:rotate(180deg)}
+/* Encadré date */
+.frame{border:3px solid var(--wine);padding:14px 18px;margin:28px auto 0;max-width:520px;text-align:center;font-size:21px;letter-spacing:.08em;text-transform:uppercase}
+.details{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:34px 0 8px;text-align:center}
+.details .script{font-size:34px;display:block;margin-bottom:4px}
+.details .ev{text-transform:uppercase;letter-spacing:.06em;font-size:16px;line-height:1.45}
+.rule{height:1px;background:var(--line);margin:30px 0}
+.quote{font-style:italic;text-align:center;font-size:18px;max-width:440px;margin:0 auto 26px;color:var(--ink-soft)}
+@media(max-width:480px){.details{grid-template-columns:1fr;gap:18px}.frame{font-size:17px}}
+/* Boutons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;background:var(--wine);color:#fff;border:0;border-radius:2px;padding:14px 26px;font-size:18px;letter-spacing:.04em;text-transform:uppercase;text-decoration:none;min-height:52px}
+.btn:hover{background:var(--wine-deep)}
+.btn:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--blush);outline-offset:2px}
+.btn.ghost{background:transparent;color:var(--wine);border:2px solid var(--wine)}
+.btn.ghost:hover{background:rgba(140,42,56,.06)}
+.btn[disabled]{opacity:.5;cursor:default}
+.btn.block{width:100%}
+/* Formulaire */
+label{display:block;font-size:17px;margin:14px 0 6px;color:var(--ink)}
+input[type=text],textarea{width:100%;font:inherit;font-size:18px;padding:10px 12px;border:1px solid var(--line);border-radius:2px;background:#fff;color:var(--ink)}
+textarea{min-height:72px;resize:vertical}
+.hint{font-size:16px;color:var(--ink-soft);margin-top:4px}
+.drop{border:2px dashed var(--wine);border-radius:4px;padding:26px 18px;text-align:center;background:rgba(255,255,255,.45);margin-top:18px}
+.drop.over{background:rgba(140,42,56,.08)}
+.drop .btn{margin:6px 6px 0}
+input[type=file]{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.files{list-style:none;margin:20px 0 0;padding:0}
+.file{display:grid;grid-template-columns:96px 1fr;gap:14px;padding:14px 0;border-top:1px solid var(--line)}
+.file .thumb{width:96px;height:96px;background:var(--paper-deep);display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:2px;color:var(--ink-soft);font-size:15px;text-align:center;padding:4px}
+.file .thumb img,.file .thumb video{width:100%;height:100%;object-fit:cover}
+.file .name{font-weight:600;word-break:break-word;font-size:17px}
+.file .meta{font-size:15px;color:var(--ink-soft)}
+.file textarea{min-height:52px;margin-top:6px;font-size:17px}
+.file .rm{background:none;border:0;color:var(--wine);text-decoration:underline;padding:0;font-size:15px;margin-top:4px}
+.bar{height:6px;background:var(--paper-deep);border-radius:3px;margin-top:8px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--wine);transition:width .2s}
+.status{font-size:15px;margin-top:4px}
+.status.ok{color:#3f6a3c}.status.err{color:var(--wine)}
+.alert{border:1px solid var(--wine);background:rgba(140,42,56,.06);padding:12px 14px;border-radius:2px;margin:16px 0;font-size:17px}
+.hidden{display:none!important}
+fieldset{border:0;padding:0;margin:26px 0 0}
+legend{font-family:"Cookie",cursive;color:var(--wine);font-size:38px;line-height:1;padding:0;margin-bottom:4px}
+.summary{margin-top:18px;font-size:17px}
+/* Confirmation */
+.done{text-align:center;padding:30px 0}
+.done .script{font-size:64px;margin-bottom:8px}
+@media(prefers-reduced-motion:no-preference){.view{animation:fade .4s ease}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+</style>
+</head>
+<body>
+<main class="wrap" id="app">
+
+<!-- ======================= ACCUEIL ======================= -->
+<section id="home" class="view">
+  <div class="octo-wrap">
+    <svg class="sprig tl" viewBox="0 0 150 150" aria-hidden="true">
+      <g fill="#c9b59a" opacity=".55">
+        <path d="M20 120c10-30 30-50 60-55-5 25-25 45-60 55z"/>
+        <path d="M40 60c15-20 40-30 65-25-10 20-35 30-65 25z"/>
+        <path d="M70 30c10-12 30-18 48-12-8 12-28 18-48 12z"/>
+      </g>
+      <g fill="#d98c93" opacity=".75">
+        <path d="M95 55c-14 2-24 12-24 24 10 4 22-2 28-10 4-5 2-12-4-14z"/>
+        <path d="M97 57c8-6 20-6 26 2-6 6-18 8-26-2z"/>
+      </g>
+      <g fill="#8c2a38" opacity=".55">
+        <circle cx="120" cy="30" r="3.5"/><circle cx="132" cy="44" r="3"/><circle cx="110" cy="18" r="2.5"/>
+        <circle cx="28" cy="40" r="3"/><circle cx="18" cy="56" r="2.5"/>
+      </g>
+      <g stroke="#b9a58a" stroke-width="1" fill="none" opacity=".7">
+        <path d="M120 30l-12 20M132 44l-20 10M28 40l14 18M18 56l22 6"/>
+      </g>
+    </svg>
+    <svg class="sprig br" viewBox="0 0 150 150" aria-hidden="true">
+      <g fill="#c9b59a" opacity=".55">
+        <path d="M20 120c10-30 30-50 60-55-5 25-25 45-60 55z"/>
+        <path d="M40 60c15-20 40-30 65-25-10 20-35 30-65 25z"/>
+        <path d="M70 30c10-12 30-18 48-12-8 12-28 18-48 12z"/>
+      </g>
+      <g fill="#d98c93" opacity=".75">
+        <path d="M95 55c-14 2-24 12-24 24 10 4 22-2 28-10 4-5 2-12-4-14z"/>
+        <path d="M97 57c8-6 20-6 26 2-6 6-18 8-26-2z"/>
+      </g>
+      <g fill="#8c2a38" opacity=".55">
+        <circle cx="120" cy="30" r="3.5"/><circle cx="132" cy="44" r="3"/><circle cx="110" cy="18" r="2.5"/>
+        <circle cx="28" cy="40" r="3"/><circle cx="18" cy="56" r="2.5"/>
+      </g>
+      <g stroke="#b9a58a" stroke-width="1" fill="none" opacity=".7">
+        <path d="M120 30l-12 20M132 44l-20 10M28 40l14 18M18 56l22 6"/>
+      </g>
+    </svg>
+    <div class="octo"><div class="inner empty" id="octoInner"><span class="mono" id="monogram">A &amp; J</span></div></div>
+  </div>
+
+  <h1 class="script">Aude et Jérémie</h1>
+  <p class="center caps" style="font-size:21px">ont la joie de vous inviter à leur mariage</p>
+  <div class="frame">se diront oui le samedi 10 octobre 2026</div>
+
+  <div class="details">
+    <div>
+      <span class="script">Cérémonie religieuse</span>
+      <div class="ev">à 15h00<br>à l'église de<br>Sainte-Solange</div>
+    </div>
+    <div>
+      <span class="script">Vin d'honneur</span>
+      <div class="ev">après la cérémonie<br>au château de la Croix<br>à Neuilly-en-Sancerre</div>
+    </div>
+  </div>
+  <p class="quote">« Pour un week-end sans contraintes, offrez à vos enfants quelques jours sans parents ! »</p>
+
+  <div class="rule"></div>
+
+  <h2 class="script center">Vos souvenirs pour la soirée</h2>
+  <p class="center">Une photo, une vidéo, une anecdote, une musique : tout ce que vous déposez ici sera diffusé pendant la fête. Personne d'autre que l'organisateur ne verra vos envois.</p>
+  <p class="center" style="margin-top:22px"><button class="btn" id="goUpload">Déposer mes photos et vidéos</button></p>
+</section>
+
+<!-- ======================= DÉPÔT ======================= -->
+<section id="upload" class="view hidden">
+  <h2 class="script center" style="font-size:52px">Déposer mes souvenirs</h2>
+  <p class="center muted">Photos, vidéos ou fichiers, un seul ou plusieurs à la fois.</p>
+
+  <div id="alertBox" class="alert hidden" role="alert"></div>
+
+  <div class="drop" id="drop">
+    <p id="dropText" class="muted" style="margin-bottom:8px">Glissez vos fichiers ici, ou</p>
+    <label class="btn" for="fileInput" id="pickLabel">Choisir des fichiers</label>
+    <input type="file" id="fileInput" multiple accept="image/*,video/*,audio/*,.pdf,.ppt,.pptx,.doc,.docx,.txt">
+    <label class="btn ghost hidden" for="camInput" id="camLabel">Prendre une photo ou une vidéo</label>
+    <input type="file" id="camInput" accept="image/*,video/*" capture="environment">
+    <p class="hint" id="limitHint"></p>
+  </div>
+
+  <ul class="files" id="fileList"></ul>
+
+  <fieldset id="globalFields">
+    <legend>Pour l'organisateur</legend>
+    <label for="nom">Votre prénom et nom</label>
+    <input type="text" id="nom" autocomplete="name" placeholder="Pour savoir qui remercier">
+
+    <label for="motAffichage">Un mot à afficher avec vos photos pendant la soirée</label>
+    <textarea id="motAffichage" placeholder="Il sera projeté tel quel, à côté de vos images"></textarea>
+
+    <label for="notePerso">Une indication pour moi (ne sera pas diffusée)</label>
+    <textarea id="notePerso" placeholder="Ordre de passage, moment souhaité, personnes à ne pas montrer…"></textarea>
+
+    <label for="musique">Une musique à passer ?</label>
+    <input type="text" id="musique" placeholder="Titre, artiste, ou lien">
+
+    <label for="lien">Un lien vers des fichiers trop lourds pour être déposés ici</label>
+    <input type="text" id="lien" inputmode="url" placeholder="WeTransfer, Google Drive, Swiss Transfer…">
+    <p class="hint">Utile pour les vidéos longues : déposez-les sur un service de transfert et collez le lien ici.</p>
+  </fieldset>
+
+  <p class="summary muted" id="summary"></p>
+  <p style="margin-top:18px"><button class="btn block" id="sendBtn" disabled>Envoyer mes souvenirs</button></p>
+  <p class="center"><button class="btn ghost" id="backBtn">Revenir à l'invitation</button></p>
+</section>
+
+<!-- ======================= CONFIRMATION ======================= -->
+<section id="done" class="view hidden">
+  <div class="done">
+    <p class="script">Merci !</p>
+    <p id="doneText">Vos souvenirs sont bien arrivés. Rendez-vous le 10 octobre.</p>
+    <p class="muted" style="font-size:16px;margin-top:14px">Retour à l'invitation dans <span id="countdown">8</span> s…</p>
+    <p style="margin-top:18px"><button class="btn ghost" id="doneBack">Revenir maintenant</button></p>
+  </div>
+</section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+/* ============================== CONFIGURATION ============================== */
+const CONFIG = {
+  SUPABASE_URL: "https://VOTRE-PROJET.supabase.co",
+  SUPABASE_ANON_KEY: "VOTRE_CLE_ANON_PUBLIQUE",
+  BUCKET: "mariage",
+  MAX_FILE_MB: 50,          // limite du plan Supabase gratuit : 50 Mo par fichier
+  MAX_FILES: 30,
+  PHOTO_URL: ""             // ex. "photo-aude-jeremie.jpg" pour remplir l'octogone
+};
+/* =========================================================================== */
+
+const $ = s => document.querySelector(s);
+const views = { home: $("#home"), upload: $("#upload"), done: $("#done") };
+function show(name){ Object.values(views).forEach(v => v.classList.add("hidden")); views[name].classList.remove("hidden"); window.scrollTo({top:0}); }
+
+if (CONFIG.PHOTO_URL) {
+  const inner = $("#octoInner"); inner.classList.remove("empty");
+  inner.style.backgroundImage = `url("${CONFIG.PHOTO_URL}")`; $("#monogram").remove();
+}
+
+const sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+
+/* --- Adaptation mobile / ordinateur --- */
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
+if (isMobile) {
+  $("#pickLabel").textContent = "Choisir dans mes photos";
+  $("#camLabel").classList.remove("hidden");
+  $("#dropText").textContent = "Depuis votre téléphone :";
+} else {
+  $("#pickLabel").textContent = "Choisir des fichiers sur mon ordinateur";
+}
+$("#limitHint").textContent = `Jusqu'à ${CONFIG.MAX_FILES} fichiers, ${CONFIG.MAX_FILE_MB} Mo maximum chacun.`;
+
+/* --- État --- */
+let items = []; // {file, message, status, progress}
+
+function fmtSize(b){ return b > 1048576 ? (b/1048576).toFixed(1)+" Mo" : Math.round(b/1024)+" Ko"; }
+function alertMsg(msg){ const a=$("#alertBox"); if(!msg){a.classList.add("hidden");return;} a.textContent=msg; a.classList.remove("hidden"); }
+
+function addFiles(list){
+  alertMsg("");
+  const rejected = [];
+  for (const f of list) {
+    if (items.length >= CONFIG.MAX_FILES) { rejected.push(`${f.name} (limite de ${CONFIG.MAX_FILES} fichiers atteinte)`); continue; }
+    if (f.size > CONFIG.MAX_FILE_MB*1048576) { rejected.push(`${f.name} (${fmtSize(f.size)}, trop lourd : utilisez le champ « lien » plus bas)`); continue; }
+    if (items.some(i => i.file.name===f.name && i.file.size===f.size)) continue;
+    items.push({ file:f, message:"", status:"", progress:0, id:crypto.randomUUID() });
+  }
+  if (rejected.length) alertMsg("Non ajouté : " + rejected.join(" ; "));
+  render();
+}
+
+function render(){
+  const ul = $("#fileList"); ul.innerHTML = "";
+  items.forEach(it => {
+    const li = document.createElement("li"); li.className="file"; li.dataset.id=it.id;
+    const thumb = document.createElement("div"); thumb.className="thumb";
+    if (it.file.type.startsWith("image/")) { const img=document.createElement("img"); img.src=URL.createObjectURL(it.file); img.alt=""; thumb.appendChild(img); }
+    else if (it.file.type.startsWith("video/")) { const v=document.createElement("video"); v.src=URL.createObjectURL(it.file); v.muted=true; thumb.appendChild(v); }
+    else thumb.textContent = (it.file.name.split(".").pop() || "fichier").toUpperCase();
+    const body = document.createElement("div");
+    body.innerHTML = `<div class="name">${escapeHtml(it.file.name)}</div><div class="meta">${fmtSize(it.file.size)}</div>`;
+    const ta = document.createElement("textarea"); ta.placeholder="Un mot pour ce fichier ? (facultatif)"; ta.value=it.message; ta.setAttribute("aria-label","Message pour "+it.file.name);
+    ta.addEventListener("input", e => it.message = e.target.value);
+    const rm = document.createElement("button"); rm.type="button"; rm.className="rm"; rm.textContent="Retirer";
+    rm.addEventListener("click", () => { items = items.filter(x => x.id!==it.id); render(); });
+    const bar = document.createElement("div"); bar.className="bar"; bar.innerHTML=`<i style="width:${it.progress}%"></i>`;
+    const st = document.createElement("div"); st.className="status "+(it.status==="ok"?"ok":it.status==="err"?"err":""); st.textContent = it.status==="ok"?"Envoyé":it.status==="err"?"Échec, réessayez":"";
+    body.append(ta, rm, bar, st); li.append(thumb, body); ul.appendChild(li);
+  });
+  const total = items.reduce((s,i)=>s+i.file.size,0);
+  $("#summary").textContent = items.length ? `${items.length} fichier${items.length>1?"s":""}, ${fmtSize(total)} au total.` : "";
+  $("#sendBtn").disabled = items.length===0;
+}
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+/* --- Entrées --- */
+$("#fileInput").addEventListener("change", e => { addFiles(e.target.files); e.target.value=""; });
+$("#camInput").addEventListener("change", e => { addFiles(e.target.files); e.target.value=""; });
+const drop = $("#drop");
+["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", e => addFiles(e.dataTransfer.files));
+
+/* --- Navigation --- */
+$("#goUpload").addEventListener("click", () => show("upload"));
+$("#backBtn").addEventListener("click", () => show("home"));
+$("#doneBack").addEventListener("click", () => { clearInterval(timer); show("home"); });
+let timer;
+
+/* --- Envoi --- */
+function safeName(n){ return n.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9._-]+/g,"_").slice(0,120); }
+
+$("#sendBtn").addEventListener("click", async () => {
+  if (!items.length) return;
+  const btn = $("#sendBtn"); btn.disabled = true; btn.textContent = "Envoi en cours…"; alertMsg("");
+  const envoiId = crypto.randomUUID();
+  const envoi = {
+    id: envoiId,
+    invite_nom: $("#nom").value.trim() || null,
+    mot_affichage: $("#motAffichage").value.trim() || null,
+    note_perso: $("#notePerso").value.trim() || null,
+    musique: $("#musique").value.trim() || null,
+    lien_externe: $("#lien").value.trim() || null,
+    appareil: isMobile ? "mobile" : "ordinateur"
+  };
+  const { error: e1 } = await sb.from("envois").insert(envoi);
+  if (e1) { alertMsg("Impossible d'enregistrer l'envoi : " + e1.message); btn.disabled=false; btn.textContent="Envoyer mes souvenirs"; return; }
+
+  let failed = 0;
+  for (const it of items) {
+    if (it.status==="ok") continue;
+    it.progress = 30; render();
+    const path = `${envoiId}/${crypto.randomUUID().slice(0,8)}-${safeName(it.file.name)}`;
+    const { error: e2 } = await sb.storage.from(CONFIG.BUCKET).upload(path, it.file, { contentType: it.file.type || "application/octet-stream", upsert:false });
+    if (e2) { it.status="err"; it.progress=0; failed++; render(); continue; }
+    const { error: e3 } = await sb.from("fichiers").insert({
+      envoi_id: envoiId, chemin: path, nom_original: it.file.name, taille: it.file.size,
+      type_mime: it.file.type || null, message: it.message.trim() || null
+    });
+    it.status = e3 ? "err" : "ok"; it.progress = e3 ? 0 : 100; if (e3) failed++; render();
+  }
+
+  btn.textContent = "Envoyer mes souvenirs";
+  if (failed) { alertMsg(`${failed} fichier${failed>1?"s n'ont":" n'a"} pas pu être envoyé${failed>1?"s":""}. Cliquez à nouveau sur « Envoyer » pour réessayer uniquement ceux-là.`); btn.disabled=false; return; }
+
+  // Succès : nettoyage puis retour à l'accueil
+  const n = items.length; items = []; render();
+  ["nom","motAffichage","notePerso","musique","lien"].forEach(id => $("#"+id).value="");
+  $("#doneText").textContent = `${n} fichier${n>1?"s":""} bien reçu${n>1?"s":""}. Rendez-vous le 10 octobre !`;
+  show("done");
+  let left = 8; $("#countdown").textContent = left;
+  timer = setInterval(() => { left--; $("#countdown").textContent = left; if (left<=0) { clearInterval(timer); show("home"); } }, 1000);
+});
+</script>
+</body>
+</html>
