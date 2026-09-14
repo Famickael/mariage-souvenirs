@@ -248,6 +248,7 @@ const $ = s => document.querySelector(s);
 const vues = { home: $('#home'), upload: $('#upload'), done: $('#done') };
 let fichiers = [];
 let envoiEnCours = false;
+let batchEnCours = null;   // réutilisé si l'invité réessaie après un échec partiel
 
 function montrer(nom){
   Object.entries(vues).forEach(([k,el]) => el.hidden = (k !== nom));
@@ -327,26 +328,30 @@ $('#form').addEventListener('submit', async e => {
   try { if (navigator.wakeLock) veille = await navigator.wakeLock.request('screen'); } catch {}
   try {
     prog.etape('Préparation de l\'envoi');
-    const start = await appel({ action:'start', nom, origin: location.origin });
-    const batchId = start.batchId;
+    const start = await appel({
+      action:'start', nom, origin: location.origin, batchId: batchEnCours,
+      fichiers: aFaire.map(f => ({ name: f.file.name, mimeType: f.file.type || 'application/octet-stream', size: f.file.size, description: f.msg }))
+    });
+    const batchId = batchEnCours = start.batchId;
+    aFaire.forEach((f, i) => { f.session = start.sessions[i] || { error: 'pas de session' }; });
     prog.etape(aFaire.length ? `Envoi de ${aFaire.length} fichier${aFaire.length > 1 ? 's' : ''}` : 'Envoi de votre mot');
 
-    // 3 fichiers en parallèle
+    // 3 fichiers en parallèle, directement vers Google Drive
     let index = 0;
     const travailleur = async () => {
       while (index < aFaire.length) {
         const f = aFaire[index++];
-        try { await envoyerFichier(f, batchId, nom); }
-        catch (err) { f.etat.textContent = 'Échec : ' + err.message; f.etat.className = 'etat err'; f.echec = true; }
+        try { await envoyerFichier(f); }
+        catch (err) { f.etat.textContent = 'Échec : ' + err.message; f.etat.className = 'etat err'; }
       }
     };
     await Promise.all([travailleur(), travailleur(), travailleur()]);
 
     prog.etape('Finalisation');
-    const envoyes = fichiers.filter(f => f.id).map(f => ({ fileId: f.id, name: f.file.name, size: f.file.size, description: f.msg }));
-    await appel({ action:'message', batchId, nom, message, nbFichiers: envoyes.length, fichiers: envoyes.filter(x => !x.journalise) });
-    envoyes.forEach(x => x.journalise = true);
-    fichiers.forEach(f => { if (f.id) f.journalise = true; });
+    const envoyes = fichiers.filter(f => f.id);
+    const aJournaliser = envoyes.filter(f => !f.journalise).map(f => ({ fileId: f.id, name: f.file.name, size: f.file.size, description: f.msg }));
+    await appel({ action:'message', batchId, nom, message, nbFichiers: envoyes.length, fichiers: aJournaliser });
+    envoyes.forEach(f => f.journalise = true);
 
     const rates = fichiers.length - envoyes.length;
     prog.terminer();
@@ -396,14 +401,10 @@ const prog = {
 };
 function duree(sec){ sec = Math.max(1, Math.round(sec)); return sec < 60 ? `${sec} s` : `${Math.floor(sec/60)} min ${String(sec%60).padStart(2,'0')} s`; }
 
-async function envoyerFichier(f, batchId, nom){
-  f.barre.parentElement.hidden = false; f.etat.className = 'etat'; f.etat.textContent = 'Préparation...';
-  const init = await appel({
-    action:'init', batchId, nom,
-    name: f.file.name, mimeType: f.file.type || 'application/octet-stream',
-    size: f.file.size, description: f.msg, origin: location.origin
-  });
-  const url = init.uploadUrl;
+async function envoyerFichier(f){
+  f.barre.parentElement.hidden = false; f.etat.className = 'etat'; f.etat.textContent = 'Envoi...';
+  if (!f.session || f.session.error) throw new Error(f.session ? f.session.error : 'pas de session');
+  const url = f.session.uploadUrl;
   let debut = 0, reponse = null;
   while (debut < f.file.size) {
     const fin = Math.min(debut + CONFIG.CHUNK, f.file.size);
@@ -411,7 +412,7 @@ async function envoyerFichier(f, batchId, nom){
     debut = fin;
   }
   const meta = JSON.parse(reponse || '{}');
-  f.id = meta.id || 'ok';
+  f.id = meta.id || 'ok'; f.session = null;
   f.barre.style.width = '100%'; f.etat.textContent = 'Envoyé'; f.etat.className = 'etat ok';
   prog.maj(f, f.file.size);
 }
@@ -440,22 +441,31 @@ function envoyerMorceau(url, blob, debut, fin, f, essai = 0){
 }
 
 let modeGet = false;
-async function appel(payload){
+/* Appel Apps Script, réessayé jusqu'à 3 fois si Google renvoie sa page d'erreur intermittente. */
+async function appel(payload, essai = 0){
   const corps = JSON.stringify(payload);
-  let r;
-  if (!modeGet) {
-    try { r = await fetch(CONFIG.SCRIPT_URL, { method:'POST', body: corps }); }
-    catch (e) { modeGet = true; }
+  try {
+    let r;
+    if (!modeGet) {
+      try { r = await fetch(CONFIG.SCRIPT_URL, { method:'POST', body: corps }); }
+      catch (e) { modeGet = true; }
+    }
+    if (modeGet) {
+      if (corps.length > 6000) throw new Error('message trop long pour ce navigateur, raccourcissez-le');
+      r = await fetch(CONFIG.SCRIPT_URL + '?q=' + encodeURIComponent(corps));
+    }
+    const texte = await r.text();
+    let data; try { data = JSON.parse(texte); }
+    catch { throw Object.assign(new Error('réponse serveur illisible (' + r.status + ')'), { reessayable: true }); }
+    if (!data.ok) throw new Error(data.error || 'erreur serveur');
+    return data;
+  } catch (err) {
+    if (err.reessayable && essai < 3) {
+      await new Promise(res => setTimeout(res, 1500 * (essai + 1)));
+      return appel(payload, essai + 1);
+    }
+    throw err;
   }
-  if (modeGet) {
-    if (corps.length > 6000) throw new Error('message trop long pour ce navigateur, raccourcissez-le');
-    r = await fetch(CONFIG.SCRIPT_URL + '?q=' + encodeURIComponent(corps));
-  }
-  const texte = await r.text();
-  let data; try { data = JSON.parse(texte); }
-  catch { throw new Error('réponse serveur illisible (' + r.status + ') : ' + texte.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,160)); }
-  if (!data.ok) throw new Error(data.error || 'erreur serveur');
-  return data;
 }
 
 function verrouiller(b){
@@ -465,7 +475,7 @@ function verrouiller(b){
 }
 function afficherEtat(txt, err){ const el = $('#global-etat'); el.textContent = txt; el.className = 'global-etat' + (err ? ' err' : ''); }
 function reinitialiser(){
-  fichiers = []; $('#liste').innerHTML = ''; $('#bloc-fichiers').hidden = true;
+  fichiers = []; batchEnCours = null; $('#liste').innerHTML = ''; $('#bloc-fichiers').hidden = true;
   $('#nom').value = ''; $('#message').value = ''; afficherEtat('');
 }
 let compteur;
