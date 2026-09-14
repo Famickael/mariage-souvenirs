@@ -6,8 +6,8 @@
  * qu'ils ne peuvent ni lister ni lire. Chaque envoi crée un sous-dossier "date – nom".
  */
 
-const FOLDER_ID = 'COLLE_ICI_L_ID_DU_DOSSIER_DRIVE';   // dossier racine "Mariage – souvenirs invités"
-const SHEET_ID  = 'COLLE_ICI_L_ID_DE_LA_FEUILLE';       // Google Sheet "Journal des envois"
+const FOLDER_ID = '1dTlYCAjIVNyllkKX-3MeatGr5R5h6WuU';   // dossier racine "Mariage – souvenirs invités"
+const SHEET_ID  = '1ueqeEvXyx6Uj5-9TjVJf3JvDqFPHEXmth7JHc-Ocj9I';       // Google Sheet "Journal des envois"
 
 function doGet() { return out({ ok: true, service: 'souvenirs-mariage' }); }
 
