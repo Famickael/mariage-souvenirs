@@ -333,7 +333,17 @@ $('#form').addEventListener('submit', async e => {
       fichiers: aFaire.map(f => ({ name: f.file.name, mimeType: f.file.type || 'application/octet-stream', size: f.file.size, description: f.msg }))
     });
     const batchId = batchEnCours = start.batchId;
-    aFaire.forEach((f, i) => { f.session = start.sessions[i] || { error: 'pas de session' }; });
+    if (Array.isArray(start.sessions)) {
+      aFaire.forEach((f, i) => { f.session = start.sessions[i] || { error: 'pas de session' }; });
+    } else {
+      // script en ancienne version : ouverture d'une session par fichier
+      for (const f of aFaire) {
+        try {
+          const init = await appel({ action:'init', batchId, nom, name: f.file.name, mimeType: f.file.type || 'application/octet-stream', size: f.file.size, description: f.msg, origin: location.origin });
+          f.session = { uploadUrl: init.uploadUrl };
+        } catch (err) { f.session = { error: err.message }; }
+      }
+    }
     prog.etape(aFaire.length ? `Envoi de ${aFaire.length} fichier${aFaire.length > 1 ? 's' : ''}` : 'Envoi de votre mot');
 
     // 3 fichiers en parallèle, directement vers Google Drive
