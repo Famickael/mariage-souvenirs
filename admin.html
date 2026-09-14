@@ -35,6 +35,23 @@
   .msg{color:var(--encre-douce);font-style:italic}
   .err{color:var(--bordeaux);font-style:italic}
   .vide{text-align:center;color:var(--encre-douce);font-style:italic;margin:40px 0}
+  .galerie{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-top:12px}
+  .carte{background:#fff8;border:1px solid var(--papier-fonce);display:flex;flex-direction:column}
+  .carte .apercu{aspect-ratio:1;background:var(--papier-fonce);display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:zoom-in;color:var(--bordeaux);font-variant:small-caps;font-weight:600;letter-spacing:.08em}
+  .carte .apercu img,.carte .apercu video{width:100%;height:100%;object-fit:cover;display:block}
+  .carte .infos{padding:8px 10px;font-size:.9rem;flex:1}
+  .carte .infos .nom{word-break:break-all}
+  .carte .actions{display:flex;gap:6px;padding:0 10px 10px}
+  .carte .actions a,.carte .actions button{font:inherit;font-size:.85rem;font-variant:small-caps;letter-spacing:.08em;font-weight:600;background:none;border:0;padding:4px 0;cursor:pointer;color:var(--bordeaux);text-decoration:none}
+  .carte .actions .suppr{margin-left:auto;color:var(--encre-douce)}
+  .carte .actions .suppr:hover{color:var(--bordeaux)}
+  .carte.supprime{opacity:.35;pointer-events:none}
+  .envoi header .actions-envoi{display:flex;gap:8px}
+  #visionneuse{position:fixed;inset:0;background:rgba(42,36,38,.92);display:flex;align-items:center;justify-content:center;z-index:9;padding:20px}
+  #visionneuse[hidden]{display:none}
+  #visionneuse img,#visionneuse video{max-width:100%;max-height:90vh;box-shadow:0 0 40px #0008}
+  #visionneuse .fermer{position:absolute;top:14px;right:18px;font-size:2rem;color:#fff;background:none;border:0;cursor:pointer}
+  #visionneuse .legende{position:absolute;bottom:14px;left:0;right:0;text-align:center;color:#fff;font-style:italic}
 </style>
 </head>
 <body>
@@ -63,6 +80,7 @@
     <p class="msg" id="info"></p>
     <div id="liste"></div>
   </section>
+  <div id="visionneuse" hidden><button class="fermer" aria-label="Fermer">×</button><div id="vis-contenu"></div><div class="legende" id="vis-legende"></div></div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -91,29 +109,74 @@ async function charger(){
   const { data, error } = await sb.from('envois').select('*, fichiers(*)').order('created_at', { ascending: false });
   if (error) { $('#info').textContent = 'Erreur : ' + error.message; return; }
   envois = data; $('#info').textContent = '';
-  const nbF = envois.reduce((a, e) => a + e.fichiers.length, 0);
-  const vol = envois.reduce((a, e) => a + e.fichiers.reduce((b, f) => b + (f.taille || 0), 0), 0);
-  $('#stat').textContent = `${envois.length} envoi${envois.length > 1 ? 's' : ''}, ${nbF} fichier${nbF > 1 ? 's' : ''}, ${taille(vol)}`;
+  majStat();
   const cont = $('#liste'); cont.innerHTML = '';
   if (!envois.length) { cont.innerHTML = '<p class="vide">Aucun envoi pour le moment.</p>'; return; }
   for (const e of envois) {
     const sec = document.createElement('section'); sec.className = 'envoi';
-    sec.innerHTML = `<header><h2>${echap(e.invite_nom || 'Invité anonyme')}</h2><span class="date">${dateFr(e.created_at)} · ${e.appareil || ''}</span></header>`
+    sec.innerHTML = `<header><h2>${echap(e.invite_nom || 'Invité anonyme')}</h2><span class="date">${dateFr(e.created_at)} · ${e.appareil || ''}</span><span class="actions-envoi"><button class="btn secondaire" data-suppr-envoi>Supprimer l'envoi</button></span></header>`
       + (e.message ? `<div class="mot">${echap(e.message)}</div>` : '');
+    sec.querySelector('[data-suppr-envoi]').onclick = async () => {
+      if (!confirm(`Supprimer tout l'envoi de ${e.invite_nom || 'cet invité'} (${e.fichiers.length} fichier(s)) ? Cette action est définitive.`)) return;
+      if (e.fichiers.length) { const { error } = await sb.storage.from(CONFIG.BUCKET).remove(e.fichiers.map(f => f.chemin)); if (error) { alert(error.message); return; } }
+      const { error } = await sb.from('envois').delete().eq('id', e.id); if (error) { alert(error.message); return; }
+      charger();
+    };
     if (e.fichiers.length) {
-      const t = document.createElement('table');
-      e.fichiers.sort((a, b) => a.created_at.localeCompare(b.created_at)).forEach(f => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td class="nom">${echap(f.nom_original)}<br><span class="msg">${taille(f.taille || 0)}${f.message ? ' · ' + echap(f.message) : ''}</span></td><td class="act"></td>`;
-        const a = document.createElement('a'); a.href = '#'; a.textContent = 'Télécharger';
-        a.onclick = async ev => { ev.preventDefault(); a.textContent = '...'; const { data, error } = await sb.storage.from(CONFIG.BUCKET).createSignedUrl(f.chemin, 3600, { download: f.nom_original }); a.textContent = 'Télécharger'; if (error) { alert(error.message); return; } window.open(data.signedUrl, '_blank'); };
-        tr.lastElementChild.appendChild(a); t.appendChild(tr);
+      const gal = document.createElement('div'); gal.className = 'galerie';
+      e.fichiers.sort((a, b) => a.created_at.localeCompare(b.created_at));
+      const { data: signes } = await sb.storage.from(CONFIG.BUCKET).createSignedUrls(e.fichiers.map(f => f.chemin), 3600);
+      e.fichiers.forEach((f, i) => {
+        const url = signes && signes[i] && signes[i].signedUrl;
+        const carte = document.createElement('div'); carte.className = 'carte';
+        const ap = document.createElement('div'); ap.className = 'apercu';
+        const type = f.type_mime || '';
+        if (type.startsWith('image/') && url) { const img = document.createElement('img'); img.loading = 'lazy'; img.src = url; img.alt = ''; img.onerror = () => { ap.textContent = 'aperçu indisponible'; }; ap.appendChild(img); }
+        else if (type.startsWith('video/') && url) { const v = document.createElement('video'); v.src = url; v.muted = true; v.preload = 'metadata'; v.playsInline = true; ap.appendChild(v); }
+        else ap.textContent = type.startsWith('audio/') ? 'audio' : 'fichier';
+        ap.onclick = () => voir(f, url);
+        const infos = document.createElement('div'); infos.className = 'infos';
+        infos.innerHTML = `<div class="nom">${echap(f.nom_original)}</div><div class="msg">${taille(f.taille || 0)}</div>` + (f.message ? `<div class="mot" style="margin:6px 0 0;padding:4px 8px">${echap(f.message)}</div>` : '');
+        const act = document.createElement('div'); act.className = 'actions';
+        const dl = document.createElement('a'); dl.href = '#'; dl.textContent = 'Télécharger';
+        dl.onclick = async ev => { ev.preventDefault(); const { data, error } = await sb.storage.from(CONFIG.BUCKET).createSignedUrl(f.chemin, 3600, { download: f.nom_original }); if (error) { alert(error.message); return; } window.open(data.signedUrl, '_blank'); };
+        const sup = document.createElement('button'); sup.className = 'suppr'; sup.textContent = 'Supprimer';
+        sup.onclick = async () => {
+          if (!confirm(`Supprimer « ${f.nom_original} » ? Cette action est définitive.`)) return;
+          carte.classList.add('supprime');
+          const { error } = await sb.storage.from(CONFIG.BUCKET).remove([f.chemin]); if (error) { alert(error.message); carte.classList.remove('supprime'); return; }
+          const { error: e2 } = await sb.from('fichiers').delete().eq('id', f.id); if (e2) { alert(e2.message); return; }
+          e.fichiers = e.fichiers.filter(x => x.id !== f.id); carte.remove(); majStat();
+        };
+        act.append(dl, sup); carte.append(ap, infos, act); gal.appendChild(carte);
       });
-      sec.appendChild(t);
+      sec.appendChild(gal);
     } else sec.insertAdjacentHTML('beforeend', '<p class="msg">Mot seul, sans fichier.</p>');
     cont.appendChild(sec);
   }
 }
+
+function majStat(){
+  const nbF = envois.reduce((a, e) => a + e.fichiers.length, 0);
+  const vol = envois.reduce((a, e) => a + e.fichiers.reduce((b, f) => b + (f.taille || 0), 0), 0);
+  $('#stat').textContent = `${envois.length} envoi${envois.length > 1 ? 's' : ''}, ${nbF} fichier${nbF > 1 ? 's' : ''}, ${taille(vol)}`;
+}
+
+/* Visionneuse plein écran */
+function voir(f, url){
+  if (!url) return;
+  const c = $('#vis-contenu'); c.innerHTML = '';
+  const type = f.type_mime || '';
+  if (type.startsWith('image/')) { const img = document.createElement('img'); img.src = url; c.appendChild(img); }
+  else if (type.startsWith('video/')) { const v = document.createElement('video'); v.src = url; v.controls = true; v.autoplay = true; v.playsInline = true; c.appendChild(v); }
+  else { window.open(url, '_blank'); return; }
+  $('#vis-legende').textContent = f.nom_original + (f.message ? ' · ' + f.message : '');
+  $('#visionneuse').hidden = false;
+}
+$('#visionneuse .fermer').onclick = fermerVis;
+$('#visionneuse').addEventListener('click', ev => { if (ev.target === $('#visionneuse')) fermerVis(); });
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape') fermerVis(); });
+function fermerVis(){ $('#visionneuse').hidden = true; $('#vis-contenu').innerHTML = ''; }
 
 $('#btn-zip').onclick = async () => {
   const btn = $('#btn-zip'); btn.disabled = true;
