@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Souvenirs · administration</title>
+<link href="https://fonts.googleapis.com/css2?family=Sacramento&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{--papier:#f3efe7;--papier-fonce:#e9e2d6;--bordeaux:#9a2e3c;--bordeaux-fonce:#7d2431;--encre:#2a2426;--encre-douce:#6b6062;--feuille:#c4b295;--ok:#4d7a4b}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--papier);color:var(--encre);font-family:"Cormorant Garamond",Georgia,serif;font-size:18px;line-height:1.45}
+  main{max-width:960px;margin:0 auto;padding:30px 20px 60px}
+  h1{font-family:"Sacramento",cursive;color:var(--bordeaux);font-weight:400;font-size:3rem;margin:0;line-height:1}
+  .caps{font-variant:small-caps;letter-spacing:.12em;font-weight:600}
+  .btn{font:inherit;font-variant:small-caps;letter-spacing:.12em;font-weight:600;font-size:.95rem;cursor:pointer;border:2px solid var(--bordeaux);background:var(--bordeaux);color:#fff;padding:8px 18px}
+  .btn.secondaire{background:transparent;color:var(--bordeaux)}
+  .btn[disabled]{opacity:.5;cursor:wait}
+  input{font:inherit;font-size:1rem;padding:8px;border:0;border-bottom:1.5px solid var(--feuille);background:#fff9;width:100%}
+  label{display:block;font-variant:small-caps;letter-spacing:.1em;font-weight:600;font-size:.95rem;margin:14px 0 4px}
+  #login{max-width:380px;margin:60px auto}
+  .barre-outils{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:20px 0}
+  .barre-outils .spacer{flex:1}
+  .stat{color:var(--encre-douce);font-style:italic}
+  .envoi{border-top:3px double var(--bordeaux);padding:16px 0 10px;margin-top:18px}
+  .envoi header{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline}
+  .envoi h2{margin:0;font-size:1.3rem;font-weight:600}
+  .envoi .date{color:var(--encre-douce);font-style:italic}
+  .mot{background:#fff8;border-left:3px solid var(--feuille);padding:8px 12px;margin:10px 0;white-space:pre-wrap}
+  table{width:100%;border-collapse:collapse;font-size:.95rem;margin-top:8px}
+  td{padding:6px 6px;border-bottom:1px solid var(--papier-fonce);vertical-align:top}
+  td.nom{word-break:break-all}
+  td.act{white-space:nowrap;text-align:right}
+  a{color:var(--bordeaux)}
+  .msg{color:var(--encre-douce);font-style:italic}
+  .err{color:var(--bordeaux);font-style:italic}
+  .vide{text-align:center;color:var(--encre-douce);font-style:italic;margin:40px 0}
+</style>
+</head>
+<body>
+<main>
+  <section id="login">
+    <h1>Souvenirs</h1>
+    <p class="caps" style="margin-top:4px">Accès organisateur</p>
+    <label for="email">E-mail</label><input id="email" type="email" autocomplete="username">
+    <label for="mdp">Mot de passe</label><input id="mdp" type="password" autocomplete="current-password">
+    <p style="margin-top:18px"><button class="btn" id="btn-login">Se connecter</button></p>
+    <p class="err" id="login-err"></p>
+  </section>
+
+  <section id="app" hidden>
+    <header style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:10px">
+      <h1>Souvenirs des invités</h1>
+      <button class="btn secondaire" id="btn-logout">Déconnexion</button>
+    </header>
+    <div class="barre-outils">
+      <button class="btn" id="btn-zip">Tout télécharger (zip)</button>
+      <button class="btn secondaire" id="btn-csv">Exporter les mots (CSV)</button>
+      <button class="btn secondaire" id="btn-refresh">Actualiser</button>
+      <span class="spacer"></span>
+      <span class="stat" id="stat"></span>
+    </div>
+    <p class="msg" id="info"></p>
+    <div id="liste"></div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+const CONFIG = { SUPABASE_URL: 'https://VOTRE-PROJET.supabase.co', SUPABASE_ANON_KEY: 'VOTRE_CLE_ANON', BUCKET: 'mariage' };
+const sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+const $ = s => document.querySelector(s);
+let envois = [];
+
+$('#btn-login').onclick = async () => {
+  $('#login-err').textContent = '';
+  const { error } = await sb.auth.signInWithPassword({ email: $('#email').value.trim(), password: $('#mdp').value });
+  if (error) { $('#login-err').textContent = 'Connexion refusée : ' + error.message; return; }
+  afficherApp();
+};
+$('#mdp').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-login').click(); });
+$('#btn-logout').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+$('#btn-refresh').onclick = charger;
+sb.auth.getSession().then(({ data }) => { if (data.session) afficherApp(); });
+
+function afficherApp(){ $('#login').hidden = true; $('#app').hidden = false; charger(); }
+
+async function charger(){
+  $('#info').textContent = 'Chargement...';
+  const { data, error } = await sb.from('envois').select('*, fichiers(*)').order('created_at', { ascending: false });
+  if (error) { $('#info').textContent = 'Erreur : ' + error.message; return; }
+  envois = data; $('#info').textContent = '';
+  const nbF = envois.reduce((a, e) => a + e.fichiers.length, 0);
+  const vol = envois.reduce((a, e) => a + e.fichiers.reduce((b, f) => b + (f.taille || 0), 0), 0);
+  $('#stat').textContent = `${envois.length} envoi${envois.length > 1 ? 's' : ''}, ${nbF} fichier${nbF > 1 ? 's' : ''}, ${taille(vol)}`;
+  const cont = $('#liste'); cont.innerHTML = '';
+  if (!envois.length) { cont.innerHTML = '<p class="vide">Aucun envoi pour le moment.</p>'; return; }
+  for (const e of envois) {
+    const sec = document.createElement('section'); sec.className = 'envoi';
+    sec.innerHTML = `<header><h2>${echap(e.invite_nom || 'Invité anonyme')}</h2><span class="date">${dateFr(e.created_at)} · ${e.appareil || ''}</span></header>`
+      + (e.message ? `<div class="mot">${echap(e.message)}</div>` : '');
+    if (e.fichiers.length) {
+      const t = document.createElement('table');
+      e.fichiers.sort((a, b) => a.created_at.localeCompare(b.created_at)).forEach(f => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td class="nom">${echap(f.nom_original)}<br><span class="msg">${taille(f.taille || 0)}${f.message ? ' · ' + echap(f.message) : ''}</span></td><td class="act"></td>`;
+        const a = document.createElement('a'); a.href = '#'; a.textContent = 'Télécharger';
+        a.onclick = async ev => { ev.preventDefault(); a.textContent = '...'; const { data, error } = await sb.storage.from(CONFIG.BUCKET).createSignedUrl(f.chemin, 3600, { download: f.nom_original }); a.textContent = 'Télécharger'; if (error) { alert(error.message); return; } window.open(data.signedUrl, '_blank'); };
+        tr.lastElementChild.appendChild(a); t.appendChild(tr);
+      });
+      sec.appendChild(t);
+    } else sec.insertAdjacentHTML('beforeend', '<p class="msg">Mot seul, sans fichier.</p>');
+    cont.appendChild(sec);
+  }
+}
+
+$('#btn-zip').onclick = async () => {
+  const btn = $('#btn-zip'); btn.disabled = true;
+  const zip = new JSZip(); let n = 0, total = envois.reduce((a, e) => a + e.fichiers.length, 0);
+  const lignes = [['Date', 'Invité', 'Appareil', 'Mot global', 'Fichier', 'Mot fichier']];
+  for (const e of envois) {
+    const dossier = zip.folder(`${e.created_at.slice(0, 16).replace(/[:T]/g, '-')}_${(e.invite_nom || 'anonyme').replace(/[^\w-]+/g, '_')}`);
+    if (e.message) dossier.file('mot.txt', e.message);
+    if (!e.fichiers.length) lignes.push([e.created_at, e.invite_nom || '', e.appareil || '', e.message || '', '', '']);
+    for (const f of e.fichiers) {
+      lignes.push([e.created_at, e.invite_nom || '', e.appareil || '', e.message || '', f.nom_original, f.message || '']);
+      $('#info').textContent = `Préparation du zip : ${++n} / ${total}`;
+      const { data, error } = await sb.storage.from(CONFIG.BUCKET).download(f.chemin);
+      if (error) { dossier.file(f.nom_original + '.ERREUR.txt', error.message); continue; }
+      dossier.file(f.nom_original, data);
+    }
+  }
+  zip.file('recapitulatif.csv', csv(lignes));
+  $('#info').textContent = 'Compression...';
+  const blob = await zip.generateAsync({ type: 'blob' });
+  telecharger(blob, 'souvenirs-aude-jeremie.zip');
+  $('#info').textContent = ''; btn.disabled = false;
+};
+
+$('#btn-csv').onclick = () => {
+  const lignes = [['Date', 'Invité', 'Appareil', 'Mot global', 'Fichier', 'Mot fichier']];
+  for (const e of envois) {
+    if (!e.fichiers.length) lignes.push([e.created_at, e.invite_nom || '', e.appareil || '', e.message || '', '', '']);
+    for (const f of e.fichiers) lignes.push([e.created_at, e.invite_nom || '', e.appareil || '', e.message || '', f.nom_original, f.message || '']);
+  }
+  telecharger(new Blob(['\ufeff' + csv(lignes)], { type: 'text/csv;charset=utf-8' }), 'mots-invites.csv');
+};
+
+function csv(l){ return l.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(';')).join('\r\n'); }
+function telecharger(blob, nom){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nom; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 60000); }
+function dateFr(iso){ return new Date(iso).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }); }
+function taille(o){ return o < 1048576 ? (o/1024).toFixed(0) + ' Ko' : o < 1073741824 ? (o/1048576).toFixed(1) + ' Mo' : (o/1073741824).toFixed(2) + ' Go'; }
+function echap(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+</script>
+</body>
+</html>
