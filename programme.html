@@ -76,6 +76,7 @@
   .interdit .liens a:hover{background:#fff;color:var(--bordeaux)}
 
   /* planning à l'échelle du temps */
+  .planning[hidden],.liste[hidden],.legende-planning[hidden]{display:none}
   .planning{position:relative;display:grid;grid-template-columns:52px 132px 1fr;margin-top:18px;border-top:1px solid var(--feuille);user-select:none}
   .planning .col-heures,.planning .col-phases,.planning .col-moments{position:relative}
   .planning .col-heures{border-right:1px solid var(--papier-fonce)}
