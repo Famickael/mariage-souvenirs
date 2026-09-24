@@ -40,19 +40,21 @@
   .diapo.sortie{opacity:0}
 
   /* photo dans l'octogone */
-  .cadre{position:relative;width:min(64vh,70vw);aspect-ratio:1;flex:none}
-  .diapo.avec-mot .cadre{width:min(56vh,70vw)}
-  .cadre .octo{position:absolute;inset:0;clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%);background:var(--bordeaux);padding:.8vmin}
-  .cadre .octo-inner{width:100%;height:100%;clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%);background:var(--papier);padding:.7vmin}
-  .cadre .media{width:100%;height:100%;clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%);overflow:hidden;background:var(--papier-fonce)}
-  .cadre img,.cadre video{width:100%;height:100%;object-fit:cover;display:block}
-  .cadre img{animation:ken 14s ease-in-out both}
-  @keyframes ken{from{transform:scale(1.02) translate(0,0)}to{transform:scale(1.12) translate(-1.5%,1.5%)}}
-  .cadre .fleurs{position:absolute;inset:-12%;pointer-events:none}
-  .legende{margin-top:3vmin;text-align:center;max-width:82vw;max-height:20vh;overflow:hidden}
+  .cadre{position:relative;width:min(76vh,70vw);aspect-ratio:1;flex:none}
+  .diapo.avec-mot{flex-direction:row;gap:5vmin;padding-left:6vmin;padding-right:6vmin}
+  .diapo.avec-mot .cadre{width:min(78vh,54vw)}
+  .legende{margin-top:2vmin;text-align:center;max-width:82vw;max-height:20vh;overflow:hidden}
+  .diapo.avec-mot .legende{margin-top:0;flex:1;max-width:40vw;max-height:80vh;text-align:left;display:flex;flex-direction:column;justify-content:center}
   .legende .qui{font-size:2vmin;color:var(--encre-douce)}
   .legende .qui .nom{font-family:"Sacramento",cursive;color:var(--bordeaux);font-size:3.6vmin;margin-left:.6vmin;letter-spacing:0;font-variant:normal}
-  .legende .mot{font-size:4.2vmin;font-style:italic;color:var(--encre);margin-top:1vmin;line-height:1.3;white-space:pre-wrap}
+  .legende .mot{font-size:4.4vmin;font-style:italic;color:var(--encre);margin-bottom:2vmin;line-height:1.3;white-space:pre-wrap;overflow:hidden}
+  .diapo.avec-mot .mot::before{content:"“";font-family:"Sacramento",cursive;color:var(--petale);font-size:9vmin;line-height:0;display:block;margin:2vmin 0 3vmin -1vmin}
+  @media (max-aspect-ratio:1/1){
+    .diapo.avec-mot{flex-direction:column;padding-left:4vmin;padding-right:4vmin}
+    .diapo.avec-mot .cadre{width:min(56vh,80vw)}
+    .diapo.avec-mot .legende{max-width:82vw;max-height:24vh;text-align:center;margin-top:2vmin}
+    .diapo.avec-mot .mot::before{display:none}
+  }
 
   /* mot seul */
   .carton{position:relative;max-width:70vw;padding:6vmin 7vmin;border:.5vmin double var(--bordeaux);background:rgba(255,255,255,.35);text-align:center}
