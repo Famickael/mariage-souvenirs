@@ -225,7 +225,7 @@ function rendre(){
        <div class="encours">${phaseCourante ? `<span class="caps" style="font-size:.85rem;color:var(--encre-douce)">${echap(phaseCourante.titre)}</span><br>` : ''}${enCours.length ? 'En cours : <b>' + enCours.map(i => echap(i.titre)).join('</b>, <b>') + '</b>' : 'Rien de programmé en ce moment.'}</div>
        <div class="ensuite">${ensuite ? `Ensuite : ${echap(ensuite.titre)} à ${fmtH(minutes(ensuite))}, dans ${fmtDuree(minutes(ensuite) - nowMin)}.` : 'Plus rien de prévu pour ce jour.'}</div>
        ${simule ? `<div class="simule">Heure simulée (${simule}). Retirer ?t= de l'adresse pour l'heure réelle.</div>` : ''}`
-    : `<div class="h">${CONFIG.JOURS.find(j => j[0] === jourActif)[1]}</div><div class="encours">${liste.length ? `${moments.length} moment${moments.length > 1 ? 's' : ''} programmé${moments.length > 1 ? 's' : ''}` : 'Rien de programmé.'}</div><div class="ensuite">${auj < jourActif ? 'À venir.' : auj > jourActif ? 'Passé.' : ''}</div>`;
+    : `<div class="h">${CONFIG.JOURS.find(j => j[0] === jourActif)[1]}</div><div class="encours">${liste.length ? `${moments.length} moment${moments.length > 1 ? 's' : ''} programmé${moments.length > 1 ? 's' : ''}` : 'Rien de programmé.'}</div><div class="ensuite">${auj < jourActif ? 'À venir. Le curseur « maintenant » et le suivi en direct apparaîtront ce jour-là.' : auj > jourActif ? 'Passé.' : ''}</div>`;
 
   rendrePlanning(liste, moments, estAuj, nowMin);
   $('#info').textContent = 'Mis à jour ' + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + '. Partagé entre tous les témoins, rafraîchi toutes les 30 s.';
@@ -299,12 +299,12 @@ function fmtTime(min){ min = ((min % 1440) + 1440) % 1440; return `${String(Math
 function brancherMoment(el, it){
   let depart = null, bouge = false, topInit = 0;
   el.addEventListener('pointerdown', e => {
-    if (it.verrouille || e.button !== 0) return;
+    if (e.button !== 0) return;
     depart = e.clientY; topInit = parseFloat(el.style.top); bouge = false;
     el.setPointerCapture(e.pointerId);
   });
   el.addEventListener('pointermove', e => {
-    if (depart === null) return;
+    if (depart === null || it.verrouille) return;
     const dy = e.clientY - depart;
     if (!bouge && Math.abs(dy) < 5) return;
     if (!bouge) { bouge = true; dragEtat = it; el.classList.add('deplace'); el.insertAdjacentHTML('beforeend', '<div class="heure-drag"></div>'); }
