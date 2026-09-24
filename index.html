@@ -257,7 +257,7 @@ const vues = { home: $('#home'), upload: $('#upload'), done: $('#done') };
 let fichiers = [];
 let envoiEnCours = false;
 let envoiId = null;   // réutilisé si l'invité réessaie après un échec partiel
-const sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+const sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
 
 function montrer(nom){
   Object.entries(vues).forEach(([k,el]) => el.hidden = (k !== nom));
