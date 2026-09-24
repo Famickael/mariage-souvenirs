@@ -46,44 +46,44 @@
   .maintenant .ensuite{color:var(--encre-douce);font-style:italic}
   .maintenant .simule{grid-column:1/-1;font-size:.85rem;color:var(--bordeaux);font-style:italic}
 
-  /* macro-timeline */
-  .macro{position:relative;margin:18px 0 6px;user-select:none}
-  .macro .bandes{position:relative;height:38px;background:var(--papier-fonce)}
-  .macro .bande{position:absolute;top:0;bottom:0;overflow:hidden;white-space:nowrap;font-size:.75rem;font-variant:small-caps;letter-spacing:.06em;font-weight:600;padding:0 6px;line-height:38px;color:#fff;cursor:pointer;opacity:.92}
-  .macro .bande.c-bordeaux{background:var(--bordeaux)}.macro .bande.c-petale{background:var(--petale)}.macro .bande.c-feuille{background:var(--feuille);color:var(--encre)}.macro .bande.c-encre{background:var(--encre)}.macro .bande.c-gris{background:var(--gris);color:var(--encre)}
-  .macro .points{position:relative;height:16px}
-  .macro .point{position:absolute;top:2px;width:10px;height:10px;transform:translateX(-50%);background:var(--bordeaux);border:2px solid var(--papier);clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%);cursor:pointer}
-  .macro .point.libre{background:var(--encre-douce)}
-  .macro .curseur{position:absolute;top:-6px;bottom:-4px;width:2px;background:var(--ok);z-index:2}
-  .macro .curseur::before{content:"maintenant";position:absolute;top:-16px;left:-30px;font-size:.7rem;color:var(--ok);font-variant:small-caps;letter-spacing:.08em;font-weight:600}
-  .macro .heures{display:flex;justify-content:space-between;font-size:.72rem;color:var(--encre-douce);margin-top:2px}
-  .legende-macro{font-size:.8rem;color:var(--encre-douce);font-style:italic;text-align:center}
+  /* liens */
+  .liens{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:6px 0 0}
+  .liens a{font-variant:small-caps;letter-spacing:.1em;font-weight:600;font-size:.85rem;color:var(--bordeaux);text-decoration:none;border:1.5px solid var(--feuille);padding:4px 12px}
+  .liens a:hover{border-color:var(--bordeaux)}
 
-  /* timeline verticale */
-  .timeline{position:relative;margin-top:26px;padding-left:92px}
-  .timeline::before{content:"";position:absolute;left:78px;top:0;bottom:0;width:2px;background:var(--feuille)}
-  .item{position:relative;margin-bottom:14px;background:#fff8;border:1px solid var(--papier-fonce);padding:10px 14px;transition:background .3s}
-  .item::before{content:"";position:absolute;left:-20px;top:16px;width:12px;height:12px;background:var(--bordeaux);clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%)}
-  .item.phase{background:transparent;border:0;border-left:4px solid var(--feuille);padding:4px 12px;margin:22px 0 10px}
-  .item.phase::before{display:none}
-  .item.phase .titre{font-family:"Sacramento",cursive;color:var(--bordeaux);font-size:1.8rem;font-weight:400}
-  .item.phase.c-bordeaux{border-left-color:var(--bordeaux)}.item.phase.c-petale{border-left-color:var(--petale)}.item.phase.c-feuille{border-left-color:var(--feuille)}.item.phase.c-encre{border-left-color:var(--encre)}.item.phase.c-gris{border-left-color:var(--gris)}
-  .item .heure{position:absolute;left:-92px;top:10px;width:64px;text-align:right;font-variant:small-caps;letter-spacing:.06em;font-weight:600;font-size:.95rem}
-  .item .heure small{display:block;font-variant:normal;letter-spacing:0;font-weight:400;font-size:.75rem;color:var(--encre-douce);font-style:italic}
-  .item .titre{font-weight:600;font-size:1.1rem}
-  .item .desc{color:var(--encre);font-size:.98rem;white-space:pre-wrap;margin-top:2px}
-  .item .meta{font-size:.82rem;color:var(--encre-douce);font-style:italic;margin-top:4px}
-  .item .meta .dans{color:var(--bordeaux)}
-  .item .outils{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center}
-  .item .outils button{font:inherit;font-size:.8rem;font-variant:small-caps;letter-spacing:.06em;font-weight:600;background:transparent;border:1.5px solid var(--feuille);color:var(--encre-douce);padding:2px 8px;cursor:pointer}
-  .item .outils button:hover{border-color:var(--bordeaux);color:var(--bordeaux)}
-  .item .outils .cadenas.ferme{border-color:var(--bordeaux);color:var(--bordeaux)}
-  .item.passe{opacity:.55}
-  .item.encours{background:#fff;border-color:var(--ok);box-shadow:0 0 0 2px var(--ok)}
-  .item.encours::before{background:var(--ok)}
-  .item.encours .heure::after{content:"en cours";display:block;color:var(--ok);font-size:.7rem;font-weight:600}
-  .item.ensuite-tag .heure::after{content:"ensuite";display:block;color:var(--bordeaux);font-size:.7rem;font-weight:600}
-  .item.verrouille .titre::after{content:" 🔒";font-size:.8rem}
+  /* planning à l'échelle du temps */
+  .planning{position:relative;display:grid;grid-template-columns:52px 132px 1fr;margin-top:18px;border-top:1px solid var(--feuille);user-select:none}
+  .planning .col-heures,.planning .col-phases,.planning .col-moments{position:relative}
+  .planning .col-heures{border-right:1px solid var(--papier-fonce)}
+  .planning .h{position:absolute;right:6px;transform:translateY(-50%);font-size:.75rem;color:var(--encre-douce);font-variant:small-caps;letter-spacing:.05em}
+  .planning .ligne-h{position:absolute;left:52px;right:0;height:1px;background:var(--papier-fonce);pointer-events:none}
+  .planning .col-phases{border-right:2px solid var(--feuille)}
+  .planning .phase{position:absolute;left:4px;right:6px;padding:6px 8px;overflow:hidden;cursor:pointer;font-family:"Sacramento",cursive;font-size:1.35rem;line-height:1.05;color:#fff;border-radius:2px}
+  .planning .phase small{display:block;font-family:"Cormorant Garamond",serif;font-variant:small-caps;letter-spacing:.06em;font-size:.72rem;opacity:.95;margin-top:2px}
+  .planning .phase.c-bordeaux{background:var(--bordeaux)}.planning .phase.c-petale{background:var(--petale)}.planning .phase.c-feuille{background:var(--feuille);color:var(--encre)}.planning .phase.c-encre{background:var(--encre)}.planning .phase.c-gris{background:var(--gris);color:var(--encre)}
+  .planning .ombre{position:absolute;left:0;right:0;pointer-events:none;opacity:.10}
+  .planning .ombre.c-bordeaux{background:var(--bordeaux)}.planning .ombre.c-petale{background:var(--petale)}.planning .ombre.c-feuille{background:var(--feuille)}.planning .ombre.c-encre{background:var(--encre)}.planning .ombre.c-gris{background:var(--gris)}
+  .planning .moment{position:absolute;background:#fffdf9;border:1px solid var(--feuille);border-left:4px solid var(--bordeaux);padding:3px 8px;overflow:hidden;cursor:pointer;font-size:.92rem;line-height:1.2;box-shadow:0 1px 2px #0001}
+  .planning .moment .t{font-weight:600}
+  .planning .moment .m{font-size:.78rem;color:var(--encre-douce);font-style:italic}
+  .planning .moment .d{font-size:.85rem;color:var(--encre);white-space:pre-wrap;margin-top:2px}
+  .planning .moment.libre{border-left-color:var(--encre-douce);cursor:grab}
+  .planning .moment.libre::after{content:"⋮⋮";position:absolute;right:6px;top:4px;color:var(--feuille);font-size:.8rem;letter-spacing:-2px}
+  .planning .moment.verrouille .t::after{content:" 🔒";font-size:.7rem}
+  .planning .moment.passe{opacity:.5}
+  .planning .moment.encours{border-color:var(--ok);box-shadow:0 0 0 2px var(--ok)}
+  .planning .moment.ensuite-tag .t::before{content:"ensuite · ";color:var(--bordeaux);font-variant:small-caps;letter-spacing:.06em;font-size:.75rem}
+  .planning .moment.deplace{opacity:.85;cursor:grabbing;z-index:5;box-shadow:0 6px 18px #0003}
+  .planning .moment.deplace .heure-drag{position:absolute;left:-52px;top:0;background:var(--bordeaux);color:#fff;font-size:.75rem;padding:1px 5px;font-variant:small-caps}
+  .planning .maintenant-ligne{position:absolute;left:0;right:0;height:2px;background:var(--ok);z-index:3;pointer-events:none}
+  .planning .maintenant-ligne::before{content:"maintenant";position:absolute;right:4px;top:-14px;font-size:.7rem;color:var(--ok);font-variant:small-caps;letter-spacing:.08em;font-weight:600}
+  .planning .plus{position:absolute;left:8px;transform:translateY(-50%);display:none;align-items:center;gap:6px;z-index:4;pointer-events:none}
+  .planning .plus span{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--bordeaux);color:#fff;font-weight:600;line-height:1}
+  .planning .plus em{font-size:.75rem;color:var(--bordeaux);font-style:normal;font-variant:small-caps;letter-spacing:.06em;background:var(--papier);padding:0 4px}
+  .planning .col-moments:hover .plus{display:flex}
+  .planning .col-moments.survol-moment .plus{display:none}
+  .legende-planning{font-size:.8rem;color:var(--encre-douce);font-style:italic;text-align:center;margin-top:6px}
+  @media (max-width:560px){.planning{grid-template-columns:44px 96px 1fr}.planning .phase{font-size:1.1rem;padding:4px 6px}.planning .ligne-h{left:44px}}
 
   /* formulaire */
   #voile{position:fixed;inset:0;background:rgba(42,36,38,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:5}
@@ -94,7 +94,7 @@
   .barre-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
   .ajout{position:fixed;right:18px;bottom:18px;z-index:4;box-shadow:0 4px 14px #0004}
   .info{text-align:center;color:var(--encre-douce);font-style:italic;font-size:.9rem;margin-top:8px}
-  @media (max-width:560px){.timeline{padding-left:70px}.timeline::before{left:58px}.item .heure{left:-70px;width:50px}.maintenant{grid-template-columns:1fr}.maintenant .h{grid-row:auto}}
+  @media (max-width:560px){.maintenant{grid-template-columns:1fr}.maintenant .h{grid-row:auto}}
 </style>
 </head>
 <body>
@@ -112,13 +112,13 @@
   <section id="app" hidden>
     <header class="titre">
       <h1 class="script">Programme du week-end</h1>
-      <p>Cliquer sur un moment pour le modifier. Un cadenas fermé fige l'heure. Les bandes colorées sont les grandes phases ; chaque moment indique dans quelle phase il tombe.</p>
+      <p>Colonne de gauche : les grandes phases. À droite : les moments, à l'échelle du temps. Glisser un moment libre pour le déplacer, cliquer pour le modifier, survoler un créneau vide pour ajouter.</p>
+      <nav class="liens"><a href="index.html" target="_blank">Dépôt des souvenirs</a><a href="admin.html" target="_blank">Administration des souvenirs</a><a href="projection.html" target="_blank">Projection</a></nav>
     </header>
     <div class="jours" id="jours"></div>
     <div class="maintenant" id="maintenant"></div>
-    <div class="macro" id="macro"></div>
-    <p class="legende-macro">Barre du jour : phases en couleur, moments en octogones (bordeaux = verrouillé, gris = déplaçable), trait vert = maintenant.</p>
-    <div class="timeline" id="timeline"></div>
+    <div class="planning" id="planning"></div>
+    <p class="legende-planning">Bordeaux : moment verrouillé. Gris avec poignée : déplaçable (glisser, ou −/+ dans la fiche). Trait vert : maintenant.</p>
     <p class="info" id="info"></p>
     <button class="btn ajout" id="btn-ajout">Ajouter un moment</button>
   </section>
@@ -132,7 +132,8 @@
     <div class="grille2">
       <div><label for="f-jour">Jour</label><select id="f-jour"></select></div>
       <div><label for="f-type">Type</label><select id="f-type"><option value="moment">Moment (activité)</option><option value="phase">Phase (bande de fond)</option></select></div>
-      <div><label for="f-debut">Heure de début</label><input id="f-debut" type="time" required></div>
+      <div><label for="f-debut">Heure de début</label><input id="f-debut" type="time" required>
+        <div style="display:flex;gap:4px;margin-top:4px"><button type="button" class="btn secondaire petit" data-dec="-15">−15</button><button type="button" class="btn secondaire petit" data-dec="-5">−5</button><button type="button" class="btn secondaire petit" data-dec="5">+5</button><button type="button" class="btn secondaire petit" data-dec="15">+15</button></div></div>
       <div><label for="f-duree">Durée (minutes)</label><input id="f-duree" type="number" min="5" step="5" value="30" required></div>
       <div id="f-couleur-bloc" hidden><label for="f-couleur">Couleur de la phase</label><select id="f-couleur"><option value="gris">Gris (logistique)</option><option value="bordeaux">Bordeaux (cérémonie)</option><option value="petale">Rose (vin d'honneur)</option><option value="feuille">Doré (repas)</option><option value="encre">Sombre (soirée)</option></select></div>
       <div><label for="f-verrou">Verrouillé</label><select id="f-verrou"><option value="false">Non, déplaçable</option><option value="true">Oui, heure figée</option></select></div>
@@ -226,43 +227,105 @@ function rendre(){
        ${simule ? `<div class="simule">Heure simulée (${simule}). Retirer ?t= de l'adresse pour l'heure réelle.</div>` : ''}`
     : `<div class="h">${CONFIG.JOURS.find(j => j[0] === jourActif)[1]}</div><div class="encours">${liste.length ? `${moments.length} moment${moments.length > 1 ? 's' : ''} programmé${moments.length > 1 ? 's' : ''}` : 'Rien de programmé.'}</div><div class="ensuite">${auj < jourActif ? 'À venir.' : auj > jourActif ? 'Passé.' : ''}</div>`;
 
-  // macro-timeline
-  const [h0, h1] = CONFIG.FENETRE, tot = (h1 - h0) * 60;
-  const pos = m => Math.max(0, Math.min(100, (m - h0 * 60) / tot * 100));
-  const mc = $('#macro');
-  mc.innerHTML = `<div class="bandes">${liste.filter(i => i.type === 'phase').map(p => `<div class="bande c-${p.couleur || 'gris'}" data-id="${p.id}" style="left:${pos(minutes(p))}%;width:${Math.max(1, pos(minutes(p) + p.duree) - pos(minutes(p)))}%" title="${echap(p.titre)} ${fmtH(minutes(p))}-${fmtH(minutes(p)+p.duree)}">${echap(p.titre)}</div>`).join('')}</div>
-    <div class="points">${moments.map(m => `<div class="point ${m.verrouille ? '' : 'libre'}" data-id="${m.id}" style="left:${pos(minutes(m))}%" title="${fmtH(minutes(m))} ${echap(m.titre)}"></div>`).join('')}</div>
-    ${estAuj && nowMin >= h0*60 && nowMin <= h1*60 ? `<div class="curseur" style="left:${pos(nowMin)}%"></div>` : ''}
-    <div class="heures">${Array.from({ length: (h1 - h0) / 3 + 1 }, (_, k) => `<span>${fmtH((h0 + 3 * k) * 60)}</span>`).join('')}</div>`;
-  mc.querySelectorAll('[data-id]').forEach(el => el.onclick = () => ouvrir(items.find(i => i.id === el.dataset.id)));
-
-  // timeline verticale
-  const tl = $('#timeline'); tl.innerHTML = '';
-  if (!liste.length) tl.innerHTML = '<p class="info">Rien pour ce jour. Ajoutez un moment.</p>';
-  let ensuiteMarque = false;
-  for (const it of liste) {
-    const d = document.createElement('div');
-    const m = minutes(it), fin = m + it.duree;
-    d.className = 'item ' + it.type + (it.verrouille ? ' verrouille' : '') + (it.type === 'phase' ? ' c-' + (it.couleur || 'gris') : '');
-    if (estAuj && it.type === 'moment') {
-      if (nowMin >= fin) d.classList.add('passe');
-      else if (nowMin >= m) d.classList.add('encours');
-      else if (!ensuiteMarque) { d.classList.add('ensuite-tag'); ensuiteMarque = true; }
-    }
-    const ph = it.type === 'moment' ? phaseDe(it, liste) : null;
-    d.innerHTML = `<div class="heure">${fmtH(m)}<small>${fmtDuree(it.duree)}</small></div>
-      <div class="titre">${echap(it.titre)}</div>
-      ${it.description ? `<div class="desc">${echap(it.description)}</div>` : ''}
-      ${it.type === 'moment' ? `<div class="meta">${fmtH(m)} à ${fmtH(fin)} · <span class="dans">${ph ? 'pendant : ' + echap(ph.titre) : 'hors phase'}</span></div>` : `<div class="meta">${fmtH(m)} à ${fmtH(fin)}</div>`}
-      <div class="outils">
-        <button data-act="-15" ${it.verrouille ? 'disabled' : ''}>−15</button><button data-act="-5" ${it.verrouille ? 'disabled' : ''}>−5</button><button data-act="+5" ${it.verrouille ? 'disabled' : ''}>+5</button><button data-act="+15" ${it.verrouille ? 'disabled' : ''}>+15</button>
-        <button data-act="modif">modifier</button>
-        <button data-act="verrou" class="cadenas ${it.verrouille ? 'ferme' : ''}">${it.verrouille ? 'verrouillé' : 'libre'}</button>
-      </div>`;
-    d.querySelectorAll('[data-act]').forEach(b => b.onclick = ev => { ev.stopPropagation(); action(it, b.dataset.act); });
-    tl.appendChild(d);
-  }
+  rendrePlanning(liste, moments, estAuj, nowMin);
   $('#info').textContent = 'Mis à jour ' + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + '. Partagé entre tous les témoins, rafraîchi toutes les 30 s.';
+}
+
+/* ---------- planning à l'échelle ---------- */
+const PX = 1.7;   // pixels par minute
+let dragEtat = null, hauteurPlanning = 0;
+function yDe(min){ return (min - CONFIG.FENETRE[0] * 60) * PX; }
+function minDeY(y){ return Math.round((y / PX + CONFIG.FENETRE[0] * 60) / 5) * 5; }
+
+function rendrePlanning(liste, moments, estAuj, nowMin){
+  const [h0, h1] = CONFIG.FENETRE; hauteurPlanning = (h1 - h0) * 60 * PX;
+  const pl = $('#planning');
+  const phases = liste.filter(i => i.type === 'phase');
+  // colonne heures + lignes
+  let heures = '', lignes = '';
+  for (let h = h0; h <= h1; h++) { heures += `<div class="h" style="top:${yDe(h*60)}px">${fmtH(h*60)}</div>`; lignes += `<div class="ligne-h" style="top:${yDe(h*60)}px"></div>`; }
+  // phases (colonne gauche) + ombres sur la colonne des moments
+  const ph = phases.map(p => `<div class="phase c-${p.couleur || 'gris'}" data-id="${p.id}" style="top:${yDe(minutes(p)) + 1}px;height:${Math.max(26, p.duree * PX - 2)}px" title="${echap(p.titre)}">${echap(p.titre)}<small>${fmtH(minutes(p))} – ${fmtH(minutes(p)+p.duree)}</small></div>`).join('');
+  const ombres = phases.map(p => `<div class="ombre c-${p.couleur || 'gris'}" style="top:${yDe(minutes(p))}px;height:${p.duree * PX}px"></div>`).join('');
+  // moments : répartition en couloirs si chevauchement
+  const couloirs = []; const place = new Map();
+  for (const m of moments) {
+    const deb = minutes(m), fin = deb + Math.max(m.duree, 20);
+    let c = couloirs.findIndex(finC => finC <= deb);
+    if (c === -1) { c = couloirs.length; couloirs.push(fin); } else couloirs[c] = fin;
+    place.set(m.id, c);
+  }
+  const nbC = Math.max(1, couloirs.length);
+  let ensuiteMarque = false;
+  const mo = moments.map(m => {
+    const deb = minutes(m), fin = deb + m.duree, c = place.get(m.id);
+    let cls = 'moment ' + (m.verrouille ? 'verrouille' : 'libre');
+    if (estAuj) { if (nowMin >= fin) cls += ' passe'; else if (nowMin >= deb) cls += ' encours'; else if (!ensuiteMarque) { cls += ' ensuite-tag'; ensuiteMarque = true; } }
+    const phaseM = phaseDe(m, liste);
+    const h = Math.max(30, m.duree * PX - 2);
+    return `<div class="${cls}" data-id="${m.id}" style="top:${yDe(deb) + 1}px;height:${h}px;left:calc(${c * 100 / nbC}% + 6px);width:calc(${100 / nbC}% - 12px)">
+      <div class="t">${echap(m.titre)}</div>
+      <div class="m">${fmtH(deb)} à ${fmtH(fin)} · ${fmtDuree(m.duree)}${phaseM ? ' · pendant : ' + echap(phaseM.titre) : ''}</div>
+      ${m.description && h > 60 ? `<div class="d">${echap(m.description)}</div>` : ''}
+    </div>`;
+  }).join('');
+  const now = estAuj && nowMin >= h0*60 && nowMin <= h1*60 ? `<div class="maintenant-ligne" style="top:${yDe(nowMin)}px"></div>` : '';
+  pl.innerHTML = `<div class="col-heures" style="height:${hauteurPlanning}px">${heures}</div>
+    <div class="col-phases" style="height:${hauteurPlanning}px">${ph}</div>
+    <div class="col-moments" style="height:${hauteurPlanning}px">${ombres}${mo}<div class="plus"><span>+</span><em></em></div></div>${lignes}${now}`;
+
+  pl.querySelectorAll('.phase').forEach(el => el.onclick = () => ouvrir(items.find(i => i.id === el.dataset.id)));
+  pl.querySelectorAll('.moment').forEach(el => brancherMoment(el, items.find(i => i.id === el.dataset.id)));
+
+  // "+" au survol d'un créneau vide
+  const col = pl.querySelector('.col-moments'), plus = pl.querySelector('.plus');
+  col.addEventListener('mousemove', e => {
+    if (e.target.closest('.moment')) { col.classList.add('survol-moment'); return; }
+    col.classList.remove('survol-moment');
+    const y = e.clientY - col.getBoundingClientRect().top;
+    plus.style.top = y + 'px'; plus.querySelector('em').textContent = 'ajouter à ' + fmtH(minDeY(y));
+  });
+  col.addEventListener('click', e => {
+    if (e.target.closest('.moment') || dragEtat) return;
+    const y = e.clientY - col.getBoundingClientRect().top;
+    ouvrir(null, fmtTime(minDeY(y)));
+  });
+  // défilement vers maintenant, une fois
+  if (now && !pl.dataset.defile) { pl.dataset.defile = '1'; setTimeout(() => window.scrollTo({ top: pl.getBoundingClientRect().top + window.scrollY + yDe(nowMin) - 220, behavior: 'smooth' }), 100); }
+}
+function fmtTime(min){ min = ((min % 1440) + 1440) % 1440; return `${String(Math.floor(min/60)).padStart(2,'0')}:${String(min%60).padStart(2,'0')}`; }
+
+/* glisser-déposer vertical des moments libres (souris et tactile) */
+function brancherMoment(el, it){
+  let depart = null, bouge = false, topInit = 0;
+  el.addEventListener('pointerdown', e => {
+    if (it.verrouille || e.button !== 0) return;
+    depart = e.clientY; topInit = parseFloat(el.style.top); bouge = false;
+    el.setPointerCapture(e.pointerId);
+  });
+  el.addEventListener('pointermove', e => {
+    if (depart === null) return;
+    const dy = e.clientY - depart;
+    if (!bouge && Math.abs(dy) < 5) return;
+    if (!bouge) { bouge = true; dragEtat = it; el.classList.add('deplace'); el.insertAdjacentHTML('beforeend', '<div class="heure-drag"></div>'); }
+    const top = Math.max(0, Math.min(hauteurPlanning - 30, topInit + dy));
+    el.style.top = top + 'px';
+    el.querySelector('.heure-drag').textContent = fmtH(minDeY(top));
+  });
+  const fin = async e => {
+    if (depart === null) return;
+    depart = null;
+    if (!bouge) { ouvrir(it); return; }
+    const nouveau = minDeY(parseFloat(el.style.top));
+    el.classList.remove('deplace'); el.querySelector('.heure-drag')?.remove();
+    setTimeout(() => { dragEtat = null; }, 50);
+    // recalcul du jour réel (après minuit → jour suivant)
+    let jour = jourLogique(it); let m = nouveau;
+    if (m >= 1440) { m -= 1440; jour = decaler(jour, 1); }
+    if (fmtTime(m) === it.debut.slice(0,5) && jour === it.jour) { rendre(); return; }
+    await maj(it.id, { debut: fmtTime(m), jour });
+  };
+  el.addEventListener('pointerup', fin); el.addEventListener('pointercancel', fin);
 }
 
 /* ---------- actions ---------- */
@@ -287,13 +350,14 @@ async function maj(id, champs){
 $('#btn-ajout').onclick = () => ouvrir(null);
 $('#f-annuler').onclick = () => { $('#voile').hidden = true; };
 $('#voile').addEventListener('click', e => { if (e.target === $('#voile')) $('#voile').hidden = true; });
+document.querySelectorAll('[data-dec]').forEach(b => b.onclick = () => { const v = $('#f-debut').value; if (!v) return; const [h, m] = v.split(':').map(Number); $('#f-debut').value = fmtTime(h * 60 + m + Number(b.dataset.dec)); });
 $('#f-type').onchange = () => { $('#f-couleur-bloc').hidden = $('#f-type').value !== 'phase'; };
-function ouvrir(it){
+function ouvrir(it, heure){
   enEdition = it;
   $('#fiche-titre').textContent = it ? 'Modifier' : 'Nouveau moment';
   $('#f-titre').value = it ? it.titre : ''; $('#f-desc').value = it ? (it.description || '') : '';
-  $('#f-jour').value = it ? it.jour : jourActif; $('#f-type').value = it ? it.type : 'moment';
-  $('#f-debut').value = it ? it.debut.slice(0, 5) : ''; $('#f-duree').value = it ? it.duree : 30;
+  $('#f-jour').value = it ? it.jour : (heure && Number(heure.slice(0,2)) < 6 ? decaler(jourActif, 1) : jourActif); $('#f-type').value = it ? it.type : 'moment';
+  $('#f-debut').value = it ? it.debut.slice(0, 5) : (heure || ''); $('#f-duree').value = it ? it.duree : 30;
   $('#f-couleur').value = it && it.couleur ? it.couleur : 'gris'; $('#f-verrou').value = it ? String(it.verrouille) : 'false';
   $('#f-couleur-bloc').hidden = $('#f-type').value !== 'phase';
   $('#f-suppr').hidden = !it;
