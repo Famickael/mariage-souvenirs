@@ -202,13 +202,13 @@
     <input type="text" id="nom" autocomplete="name" placeholder="Prénom et nom">
 
     <div id="bloc-fichiers" hidden>
-      <label>Vos fichiers <small>vous pouvez ajouter un mot sous chacun</small></label>
+      <label>Vos fichiers <small>vous pouvez ajouter un message à afficher avec chacun</small></label>
       <ul class="fichiers" id="liste"></ul>
       <p class="centre" style="margin-top:12px"><button type="button" class="btn secondaire" id="btn-ajouter">Ajouter d'autres fichiers</button></p>
     </div>
 
-    <div class="bloc">
-      <label for="message">Un mot pour l'organisateur <small>facultatif</small></label>
+    <div class="bloc" id="bloc-message">
+      <label for="message">Un mot pour l'organisateur <small>facultatif, si vous n'envoyez pas de fichier</small></label>
       <textarea id="message" rows="4" placeholder="Un mot à afficher pendant la projection, une indication, une musique à passer, une consigne pour un fichier..."></textarea>
     </div>
 
@@ -293,6 +293,7 @@ function ajouterFichiers(liste){
     fichiers.push(f);
   });
   $('#bloc-fichiers').hidden = fichiers.length === 0;
+  $('#bloc-message').hidden = fichiers.length > 0;
   if (trop.length) afficherEtat(`Fichier trop volumineux (max ${CONFIG.MAX_FILE_MB} Mo) : ${trop.join(', ')}`, true);
 }
 
@@ -306,7 +307,7 @@ function rendreLigne(f){
   const centre = document.createElement('div');
   centre.innerHTML = `<div class="fichier-nom">${echap(f.file.name)} <span>(${taille(f.file.size)})</span></div>`;
   const ta = document.createElement('textarea');
-  ta.className = 'fichier-msg'; ta.rows = 1; ta.placeholder = 'Un mot pour ce fichier (facultatif)';
+  ta.className = 'fichier-msg'; ta.rows = 1; ta.placeholder = 'Message à afficher avec ce fichier (facultatif)';
   ta.oninput = () => f.msg = ta.value;
   centre.appendChild(ta);
   const barre = document.createElement('div'); barre.className = 'barre'; barre.innerHTML = '<i></i>'; barre.hidden = true;
@@ -316,7 +317,7 @@ function rendreLigne(f){
 
   const retirer = document.createElement('button');
   retirer.type = 'button'; retirer.className = 'retirer'; retirer.textContent = '×'; retirer.title = 'Retirer';
-  retirer.onclick = () => { if (envoiEnCours) return; prog.parFichier.delete(f); fichiers = fichiers.filter(x => x !== f); li.remove(); $('#bloc-fichiers').hidden = fichiers.length === 0; };
+  retirer.onclick = () => { if (envoiEnCours) return; prog.parFichier.delete(f); fichiers = fichiers.filter(x => x !== f); li.remove(); $('#bloc-fichiers').hidden = fichiers.length === 0; $('#bloc-message').hidden = fichiers.length > 0; };
 
   li.append(vig, centre, retirer);
   return li;
@@ -327,7 +328,7 @@ $('#form').addEventListener('submit', async e => {
   e.preventDefault();
   if (envoiEnCours) return;
   const nom = $('#nom').value.trim();
-  const message = $('#message').value.trim();
+  const message = fichiers.length ? '' : $('#message').value.trim();
   if (!nom) { afficherEtat('Indiquez votre nom pour que l\'organisateur sache de qui vient l\'envoi.', true); $('#nom').focus(); return; }
   if (!fichiers.length && !message) { afficherEtat('Ajoutez au moins un fichier ou un mot.', true); return; }
   if (CONFIG.SUPABASE_URL.includes('VOTRE-PROJET')) { afficherEtat('La page n\'est pas encore reliée au serveur.', true); return; }
@@ -464,7 +465,7 @@ function verrouiller(b){
 }
 function afficherEtat(txt, err){ const el = $('#global-etat'); el.textContent = txt; el.className = 'global-etat' + (err ? ' err' : ''); }
 function reinitialiser(){
-  fichiers = []; envoiId = null; $('#liste').innerHTML = ''; $('#bloc-fichiers').hidden = true;
+  fichiers = []; envoiId = null; $('#liste').innerHTML = ''; $('#bloc-fichiers').hidden = true; $('#bloc-message').hidden = false;
   $('#nom').value = ''; $('#message').value = ''; afficherEtat('');
 }
 let compteur;
