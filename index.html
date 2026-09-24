@@ -173,7 +173,7 @@
   </div>
 
   <div class="cartouche">
-    <p class="caps">Vos photos, vidéos et petits mots</p>
+    <p class="caps">Vos photos et vidéos</p>
     <p style="font-size:1rem;color:var(--encre-douce)">Ce que vous déposez ici sera projeté pendant la soirée.<br>Seul l'organisateur y a accès : les autres invités ne voient pas vos envois.</p>
   </div>
 
@@ -207,10 +207,6 @@
       <p class="centre" style="margin-top:12px"><button type="button" class="btn secondaire" id="btn-ajouter">Ajouter d'autres fichiers</button></p>
     </div>
 
-    <div class="bloc" id="bloc-message">
-      <label for="message">Un mot pour l'organisateur <small>facultatif, si vous n'envoyez pas de fichier</small></label>
-      <textarea id="message" rows="4" placeholder="Un mot à afficher pendant la projection, une indication, une musique à passer, une consigne pour un fichier..."></textarea>
-    </div>
 
     <div class="progression" id="progression" hidden>
       <div class="etape" id="prog-etape">Préparation de l'envoi</div>
@@ -293,7 +289,6 @@ function ajouterFichiers(liste){
     fichiers.push(f);
   });
   $('#bloc-fichiers').hidden = fichiers.length === 0;
-  $('#bloc-message').hidden = fichiers.length > 0;
   if (trop.length) afficherEtat(`Fichier trop volumineux (max ${CONFIG.MAX_FILE_MB} Mo) : ${trop.join(', ')}`, true);
 }
 
@@ -317,7 +312,7 @@ function rendreLigne(f){
 
   const retirer = document.createElement('button');
   retirer.type = 'button'; retirer.className = 'retirer'; retirer.textContent = '×'; retirer.title = 'Retirer';
-  retirer.onclick = () => { if (envoiEnCours) return; prog.parFichier.delete(f); fichiers = fichiers.filter(x => x !== f); li.remove(); $('#bloc-fichiers').hidden = fichiers.length === 0; $('#bloc-message').hidden = fichiers.length > 0; };
+  retirer.onclick = () => { if (envoiEnCours) return; prog.parFichier.delete(f); fichiers = fichiers.filter(x => x !== f); li.remove(); $('#bloc-fichiers').hidden = fichiers.length === 0; };
 
   li.append(vig, centre, retirer);
   return li;
@@ -328,9 +323,9 @@ $('#form').addEventListener('submit', async e => {
   e.preventDefault();
   if (envoiEnCours) return;
   const nom = $('#nom').value.trim();
-  const message = fichiers.length ? '' : $('#message').value.trim();
+  const message = '';
   if (!nom) { afficherEtat('Indiquez votre nom pour que l\'organisateur sache de qui vient l\'envoi.', true); $('#nom').focus(); return; }
-  if (!fichiers.length && !message) { afficherEtat('Ajoutez au moins un fichier ou un mot.', true); return; }
+  if (!fichiers.length) { afficherEtat('Ajoutez au moins un fichier.', true); return; }
   if (CONFIG.SUPABASE_URL.includes('VOTRE-PROJET')) { afficherEtat('La page n\'est pas encore reliée au serveur.', true); return; }
 
   envoiEnCours = true; verrouiller(true); afficherEtat('');
@@ -347,7 +342,7 @@ $('#form').addEventListener('submit', async e => {
         if (error) throw new Error(error.message);
       });
     }
-    prog.etape(aFaire.length ? `Envoi de ${aFaire.length} fichier${aFaire.length > 1 ? 's' : ''}` : 'Envoi de votre mot');
+    prog.etape(`Envoi de ${aFaire.length} fichier${aFaire.length > 1 ? 's' : ''}`);
 
     let index = 0;
     const travailleur = async () => {
@@ -378,9 +373,7 @@ $('#form').addEventListener('submit', async e => {
     if (rates) {
       afficherEtat(`${ok} fichier(s) envoyé(s), ${rates} en échec. Cliquez à nouveau sur Envoyer : seuls les fichiers en échec seront renvoyés.`, true);
     } else {
-      $('#done-texte').textContent = ok
-        ? `${ok === 1 ? 'Votre fichier est bien arrivé' : `Vos ${ok} fichiers sont bien arrivés`}${message ? ', ainsi que votre mot' : ''}.`
-        : 'Votre mot est bien arrivé.';
+      $('#done-texte').textContent = ok === 1 ? 'Votre fichier est bien arrivé.' : `Vos ${ok} fichiers sont bien arrivés.`;
       montrer('done'); lancerCompteur();
     }
   } catch (err) {
@@ -460,13 +453,13 @@ function duree(sec){ sec = Math.max(1, Math.round(sec)); return sec < 60 ? `${se
 
 function verrouiller(b){
   $('#btn-envoyer').disabled = b; $('#btn-retour').disabled = b; $('#btn-ajouter').disabled = b;
-  $('#nom').disabled = b; $('#message').disabled = b;
+  $('#nom').disabled = b;
   fichiers.forEach(f => f.ta.disabled = b);
 }
 function afficherEtat(txt, err){ const el = $('#global-etat'); el.textContent = txt; el.className = 'global-etat' + (err ? ' err' : ''); }
 function reinitialiser(){
-  fichiers = []; envoiId = null; $('#liste').innerHTML = ''; $('#bloc-fichiers').hidden = true; $('#bloc-message').hidden = false;
-  $('#nom').value = ''; $('#message').value = ''; afficherEtat('');
+  fichiers = []; envoiId = null; $('#liste').innerHTML = ''; $('#bloc-fichiers').hidden = true;
+  $('#nom').value = ''; afficherEtat('');
 }
 let compteur;
 function lancerCompteur(){
