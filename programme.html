@@ -47,9 +47,9 @@
   .maintenant .simule{grid-column:1/-1;font-size:.85rem;color:var(--bordeaux);font-style:italic}
 
   /* liens */
-  .liens{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:6px 0 0}
-  .liens a{font-variant:small-caps;letter-spacing:.1em;font-weight:600;font-size:.85rem;color:var(--bordeaux);text-decoration:none;border:1.5px solid var(--feuille);padding:4px 12px}
-  .liens a:hover{border-color:var(--bordeaux)}
+  .interdit .liens{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:10px 0 0}
+  .interdit .liens a{font-variant:small-caps;letter-spacing:.1em;font-weight:600;font-size:.8rem;color:#fff;text-decoration:none;border:1.5px solid rgba(255,255,255,.7);padding:3px 12px}
+  .interdit .liens a:hover{background:#fff;color:var(--bordeaux)}
 
   /* planning à l'échelle du temps */
   .planning{position:relative;display:grid;grid-template-columns:52px 132px 1fr;margin-top:18px;border-top:1px solid var(--feuille);user-select:none}
@@ -67,7 +67,7 @@
   .planning .moment .t{font-weight:600}
   .planning .moment .m{font-size:.78rem;color:var(--encre-douce);font-style:italic}
   .planning .moment .d{font-size:.85rem;color:var(--encre);white-space:pre-wrap;margin-top:2px}
-  .planning .moment.libre{border-left-color:var(--encre-douce);cursor:grab}
+  .planning .moment.libre{border-left-color:var(--encre-douce);cursor:grab;touch-action:none}
   .planning .moment.libre::after{content:"⋮⋮";position:absolute;right:6px;top:4px;color:var(--feuille);font-size:.8rem;letter-spacing:-2px}
   .planning .moment.verrouille .t::after{content:" 🔒";font-size:.7rem}
   .planning .moment.passe{opacity:.5}
@@ -98,7 +98,8 @@
 </style>
 </head>
 <body>
-<div class="interdit">Interdit aux mariés<small>Ici on garde les surprises. Aude, Jérémie : demi-tour !</small></div>
+<div class="interdit">Interdit aux mariés<small>Ici on garde les surprises. Aude, Jérémie : demi-tour !</small>
+  <nav class="liens"><a href="index.html" target="_blank">Dépôt des souvenirs</a><a href="admin.html" target="_blank">Administration</a><a href="projection.html" target="_blank">Projection</a></nav></div>
 <main>
   <section id="login">
     <h1 class="script">Programme des témoins</h1>
@@ -113,7 +114,6 @@
     <header class="titre">
       <h1 class="script">Programme du week-end</h1>
       <p>Colonne de gauche : les grandes phases. À droite : les moments, à l'échelle du temps. Glisser un moment libre pour le déplacer, cliquer pour le modifier, survoler un créneau vide pour ajouter.</p>
-      <nav class="liens"><a href="index.html" target="_blank">Dépôt des souvenirs</a><a href="admin.html" target="_blank">Administration des souvenirs</a><a href="projection.html" target="_blank">Projection</a></nav>
     </header>
     <div class="jours" id="jours"></div>
     <div class="maintenant" id="maintenant"></div>
@@ -171,7 +171,11 @@ $('#btn-login').onclick = async () => {
   demarrer();
 };
 $('#mdp').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-login').click(); });
-sb.auth.getSession().then(({ data }) => { if (data.session) demarrer(); });
+sb.auth.getSession().then(async ({ data }) => {
+  if (data.session) return demarrer();
+  const { error } = await sb.from('programme').select('id').limit(1);
+  if (!error) demarrer();
+});
 
 async function demarrer(){
   $('#login').hidden = true; $('#app').hidden = false;
@@ -197,6 +201,7 @@ function fmtDuree(m){ return m < 60 ? `${m} min` : `${Math.floor(m/60)}h${m % 60
 async function charger(){
   const { data, error } = await sb.from('programme').select('*').order('jour').order('debut');
   if (error) { $('#info').textContent = 'Erreur : ' + error.message; return; }
+  if (dragEtat) return;
   items = data; rendre();
 }
 
@@ -205,6 +210,7 @@ function phaseDe(it, liste){ const m = minutes(it); return liste.filter(p => p.t
 
 /* ---------- rendu ---------- */
 function rendre(){
+  if (dragEtat) return;
   const auj = dateISO(heureLogique(maintenant()));
   const nowMin = minutesMaintenant();
   // onglets
@@ -318,11 +324,12 @@ function brancherMoment(el, it){
     if (!bouge) { ouvrir(it); return; }
     const nouveau = minDeY(parseFloat(el.style.top));
     el.classList.remove('deplace'); el.querySelector('.heure-drag')?.remove();
-    setTimeout(() => { dragEtat = null; }, 50);
+    await new Promise(r => setTimeout(r, 60)); dragEtat = null;
     // recalcul du jour réel (après minuit → jour suivant)
     let jour = jourLogique(it); let m = nouveau;
     if (m >= 1440) { m -= 1440; jour = decaler(jour, 1); }
     if (fmtTime(m) === it.debut.slice(0,5) && jour === it.jour) { rendre(); return; }
+    if (!confirm(`Déplacer « ${it.titre} » de ${fmtH(minutes(it))} à ${fmtH(nouveau)} ?`)) { rendre(); return; }
     await maj(it.id, { debut: fmtTime(m), jour });
   };
   el.addEventListener('pointerup', fin); el.addEventListener('pointercancel', fin);
