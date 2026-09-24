@@ -34,13 +34,14 @@
   header.titre p{margin:4px 0 0;color:var(--encre-douce);font-style:italic}
 
   /* onglets jours */
-  .jours{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:18px 0 8px}
-  .jours button{font:inherit;font-variant:small-caps;letter-spacing:.1em;font-weight:600;font-size:.95rem;background:transparent;border:1.5px solid var(--feuille);color:var(--encre-douce);padding:6px 14px;cursor:pointer}
+  .jours{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:18px 0 8px}
+  .jours button{font:inherit;font-variant:small-caps;letter-spacing:.08em;font-weight:600;font-size:.92rem;background:transparent;border:1.5px solid var(--feuille);color:var(--encre-douce);padding:7px 4px;cursor:pointer;white-space:nowrap}
   .jours button.actif{border-color:var(--bordeaux);color:var(--bordeaux);background:#fff8}
   .jours button.aujourdhui::after{content:" •";color:var(--ok)}
-  .vues{display:flex;justify-content:center;gap:0;margin:4px 0 0}
-  .vues button{font:inherit;font-variant:small-caps;letter-spacing:.1em;font-weight:600;font-size:.85rem;background:transparent;border:1.5px solid var(--feuille);color:var(--encre-douce);padding:4px 14px;cursor:pointer}
-  .vues button:first-child{border-right:0}
+  .vues{display:flex;justify-content:flex-end;align-items:center;gap:6px;margin:10px 0 0}
+  .vues span{font-size:.8rem;color:var(--encre-douce);font-style:italic;margin-right:4px}
+  .vues button{width:36px;height:32px;background:transparent;border:1.5px solid var(--feuille);color:var(--encre-douce);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}
+  .vues button svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round}
   .vues button.actif{background:var(--bordeaux);border-color:var(--bordeaux);color:#fff}
   /* vue liste */
   .liste{margin-top:16px}
@@ -137,11 +138,12 @@
   <section id="app" hidden>
     <header class="titre">
       <h1 class="script">Programme du week-end</h1>
-      <p>Colonne de gauche : les grandes phases. À droite : les moments, à l'échelle du temps. Glisser un moment libre pour le déplacer, cliquer pour le modifier, survoler un créneau vide pour ajouter.</p>
     </header>
     <div class="jours" id="jours"></div>
-    <div class="vues"><button id="vue-liste">Liste</button><button id="vue-planning">Planning</button></div>
     <div class="maintenant" id="maintenant"></div>
+    <div class="vues"><span>Affichage</span>
+      <button id="vue-liste" title="Liste" aria-label="Vue liste"><svg viewBox="0 0 24 24"><path d="M5 6h14M5 12h14M5 18h14"/></svg></button>
+      <button id="vue-planning" title="Planning" aria-label="Vue planning"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 19h16M9 5v14M4 10h5M4 15h5M13 9h5v4h-5z"/></svg></button></div>
     <div class="planning" id="planning"></div>
     <p class="legende-planning">Bordeaux : moment verrouillé. Gris avec poignée : déplaçable (glisser, ou −/+ dans la fiche). Trait vert : maintenant.</p>
     <div class="liste" id="liste" hidden></div>
@@ -228,7 +230,7 @@ function fmtDuree(m){ return m < 60 ? `${m} min` : `${Math.floor(m/60)}h${m % 60
 async function charger(){
   const { data, error } = await sb.from('programme').select('*').order('jour').order('debut');
   if (error) { $('#info').textContent = 'Erreur : ' + error.message; return; }
-  if (dragEtat) return;
+  if (document.querySelector('.moment.deplace')) return;
   items = data; rendre();
 }
 
@@ -237,7 +239,7 @@ function phaseDe(it, liste){ const m = minutes(it); return liste.filter(p => p.t
 
 /* ---------- rendu ---------- */
 function rendre(){
-  if (dragEtat) return;
+  if (document.querySelector('.moment.deplace')) return;
   const auj = dateISO(heureLogique(maintenant()));
   const nowMin = minutesMaintenant();
   // onglets
@@ -407,8 +409,9 @@ async function maj(id, champs){
 
 /* ---------- fiche ---------- */
 $('#btn-ajout').onclick = () => ouvrir(null);
-$('#vue-liste').onclick = () => { vue = 'liste'; rendre(); };
-$('#vue-planning').onclick = () => { vue = 'planning'; rendre(); };
+$('#vue-liste').onclick = () => { vue = 'liste'; dragEtat = null; document.querySelectorAll('.moment.deplace').forEach(e => e.classList.remove('deplace')); rendre(); };
+$('#vue-planning').onclick = () => { vue = 'planning'; dragEtat = null; rendre(); };
+window.addEventListener('pointerup', () => setTimeout(() => { if (!document.querySelector('.moment.deplace')) dragEtat = null; }, 100));
 $('#f-annuler').onclick = () => { $('#voile').hidden = true; };
 $('#voile').addEventListener('click', e => { if (e.target === $('#voile')) $('#voile').hidden = true; });
 document.querySelectorAll('[data-dec]').forEach(b => b.onclick = () => { const v = $('#f-debut').value; if (!v) return; const [h, m] = v.split(':').map(Number); $('#f-debut').value = fmtTime(h * 60 + m + Number(b.dataset.dec)); });
