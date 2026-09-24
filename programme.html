@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Programme des témoins</title>
+<link href="https://fonts.googleapis.com/css2?family=Sacramento&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{--papier:#f3efe7;--papier-fonce:#e9e2d6;--bordeaux:#9a2e3c;--bordeaux-fonce:#7d2431;--encre:#2a2426;--encre-douce:#6b6062;--feuille:#c4b295;--petale:#d98a93;--ok:#4d7a4b;--gris:#cfc7bb}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--papier);color:var(--encre);font-family:"Cormorant Garamond",Georgia,serif;font-size:18px;line-height:1.45}
+  main{max-width:900px;margin:0 auto;padding:0 18px 80px}
+  .script{font-family:"Sacramento",cursive;color:var(--bordeaux);font-weight:400;line-height:1}
+  .caps{font-variant:small-caps;letter-spacing:.12em;font-weight:600}
+  .btn{font:inherit;font-variant:small-caps;letter-spacing:.12em;font-weight:600;font-size:.95rem;cursor:pointer;border:2px solid var(--bordeaux);background:var(--bordeaux);color:#fff;padding:8px 16px}
+  .btn.secondaire{background:transparent;color:var(--bordeaux)}
+  .btn.petit{padding:4px 10px;font-size:.85rem;border-width:1.5px}
+  .btn[disabled]{opacity:.4;cursor:not-allowed}
+  input,textarea,select{font:inherit;font-size:1rem;padding:8px;border:0;border-bottom:1.5px solid var(--feuille);background:#fff9;width:100%;color:var(--encre)}
+  textarea{resize:vertical}
+  label{display:block;font-variant:small-caps;letter-spacing:.1em;font-weight:600;font-size:.9rem;margin:12px 0 2px}
+
+  /* bandeau interdit */
+  .interdit{background:var(--bordeaux);color:#fff;text-align:center;padding:12px 16px;font-variant:small-caps;letter-spacing:.22em;font-weight:600;font-size:1.05rem;border-bottom:4px double var(--papier)}
+  .interdit small{display:block;font-variant:normal;letter-spacing:0;font-weight:400;font-style:italic;opacity:.9;font-size:.95rem}
+
+  #login{max-width:380px;margin:60px auto}
+  #login h1{font-size:3rem;margin:0;text-align:center}
+  .err{color:var(--bordeaux);font-style:italic}
+
+  header.titre{text-align:center;padding:26px 0 10px}
+  header.titre h1{font-size:3.2rem;margin:0}
+  header.titre p{margin:4px 0 0;color:var(--encre-douce);font-style:italic}
+
+  /* onglets jours */
+  .jours{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:18px 0 8px}
+  .jours button{font:inherit;font-variant:small-caps;letter-spacing:.1em;font-weight:600;font-size:.95rem;background:transparent;border:1.5px solid var(--feuille);color:var(--encre-douce);padding:6px 14px;cursor:pointer}
+  .jours button.actif{border-color:var(--bordeaux);color:var(--bordeaux);background:#fff8}
+  .jours button.aujourdhui::after{content:" •";color:var(--ok)}
+
+  /* maintenant */
+  .maintenant{border:3px double var(--bordeaux);padding:12px 16px;margin:14px 0;background:#fff7;display:grid;grid-template-columns:auto 1fr;gap:6px 16px;align-items:baseline}
+  .maintenant .h{font-family:"Sacramento",cursive;color:var(--bordeaux);font-size:2.4rem;line-height:1;grid-row:span 2}
+  .maintenant .encours b{font-weight:600}
+  .maintenant .ensuite{color:var(--encre-douce);font-style:italic}
+  .maintenant .simule{grid-column:1/-1;font-size:.85rem;color:var(--bordeaux);font-style:italic}
+
+  /* macro-timeline */
+  .macro{position:relative;margin:18px 0 6px;user-select:none}
+  .macro .bandes{position:relative;height:38px;background:var(--papier-fonce)}
+  .macro .bande{position:absolute;top:0;bottom:0;overflow:hidden;white-space:nowrap;font-size:.75rem;font-variant:small-caps;letter-spacing:.06em;font-weight:600;padding:0 6px;line-height:38px;color:#fff;cursor:pointer;opacity:.92}
+  .macro .bande.c-bordeaux{background:var(--bordeaux)}.macro .bande.c-petale{background:var(--petale)}.macro .bande.c-feuille{background:var(--feuille);color:var(--encre)}.macro .bande.c-encre{background:var(--encre)}.macro .bande.c-gris{background:var(--gris);color:var(--encre)}
+  .macro .points{position:relative;height:16px}
+  .macro .point{position:absolute;top:2px;width:10px;height:10px;transform:translateX(-50%);background:var(--bordeaux);border:2px solid var(--papier);clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%);cursor:pointer}
+  .macro .point.libre{background:var(--encre-douce)}
+  .macro .curseur{position:absolute;top:-6px;bottom:-4px;width:2px;background:var(--ok);z-index:2}
+  .macro .curseur::before{content:"maintenant";position:absolute;top:-16px;left:-30px;font-size:.7rem;color:var(--ok);font-variant:small-caps;letter-spacing:.08em;font-weight:600}
+  .macro .heures{display:flex;justify-content:space-between;font-size:.72rem;color:var(--encre-douce);margin-top:2px}
+  .legende-macro{font-size:.8rem;color:var(--encre-douce);font-style:italic;text-align:center}
+
+  /* timeline verticale */
+  .timeline{position:relative;margin-top:26px;padding-left:92px}
+  .timeline::before{content:"";position:absolute;left:78px;top:0;bottom:0;width:2px;background:var(--feuille)}
+  .item{position:relative;margin-bottom:14px;background:#fff8;border:1px solid var(--papier-fonce);padding:10px 14px;transition:background .3s}
+  .item::before{content:"";position:absolute;left:-20px;top:16px;width:12px;height:12px;background:var(--bordeaux);clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%)}
+  .item.phase{background:transparent;border:0;border-left:4px solid var(--feuille);padding:4px 12px;margin:22px 0 10px}
+  .item.phase::before{display:none}
+  .item.phase .titre{font-family:"Sacramento",cursive;color:var(--bordeaux);font-size:1.8rem;font-weight:400}
+  .item.phase.c-bordeaux{border-left-color:var(--bordeaux)}.item.phase.c-petale{border-left-color:var(--petale)}.item.phase.c-feuille{border-left-color:var(--feuille)}.item.phase.c-encre{border-left-color:var(--encre)}.item.phase.c-gris{border-left-color:var(--gris)}
+  .item .heure{position:absolute;left:-92px;top:10px;width:64px;text-align:right;font-variant:small-caps;letter-spacing:.06em;font-weight:600;font-size:.95rem}
+  .item .heure small{display:block;font-variant:normal;letter-spacing:0;font-weight:400;font-size:.75rem;color:var(--encre-douce);font-style:italic}
+  .item .titre{font-weight:600;font-size:1.1rem}
+  .item .desc{color:var(--encre);font-size:.98rem;white-space:pre-wrap;margin-top:2px}
+  .item .meta{font-size:.82rem;color:var(--encre-douce);font-style:italic;margin-top:4px}
+  .item .meta .dans{color:var(--bordeaux)}
+  .item .outils{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center}
+  .item .outils button{font:inherit;font-size:.8rem;font-variant:small-caps;letter-spacing:.06em;font-weight:600;background:transparent;border:1.5px solid var(--feuille);color:var(--encre-douce);padding:2px 8px;cursor:pointer}
+  .item .outils button:hover{border-color:var(--bordeaux);color:var(--bordeaux)}
+  .item .outils .cadenas.ferme{border-color:var(--bordeaux);color:var(--bordeaux)}
+  .item.passe{opacity:.55}
+  .item.encours{background:#fff;border-color:var(--ok);box-shadow:0 0 0 2px var(--ok)}
+  .item.encours::before{background:var(--ok)}
+  .item.encours .heure::after{content:"en cours";display:block;color:var(--ok);font-size:.7rem;font-weight:600}
+  .item.ensuite-tag .heure::after{content:"ensuite";display:block;color:var(--bordeaux);font-size:.7rem;font-weight:600}
+  .item.verrouille .titre::after{content:" 🔒";font-size:.8rem}
+
+  /* formulaire */
+  #voile{position:fixed;inset:0;background:rgba(42,36,38,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:5}
+  #voile[hidden]{display:none}
+  #fiche{background:var(--papier);width:min(520px,100%);padding:22px 24px;border:3px double var(--bordeaux);max-height:92vh;overflow:auto}
+  #fiche h2{margin:0;font-size:2.2rem}
+  .grille2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+  .barre-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+  .ajout{position:fixed;right:18px;bottom:18px;z-index:4;box-shadow:0 4px 14px #0004}
+  .info{text-align:center;color:var(--encre-douce);font-style:italic;font-size:.9rem;margin-top:8px}
+  @media (max-width:560px){.timeline{padding-left:70px}.timeline::before{left:58px}.item .heure{left:-70px;width:50px}.maintenant{grid-template-columns:1fr}.maintenant .h{grid-row:auto}}
+</style>
+</head>
+<body>
+<div class="interdit">Interdit aux mariés<small>Ici on garde les surprises. Aude, Jérémie : demi-tour !</small></div>
+<main>
+  <section id="login">
+    <h1 class="script">Programme des témoins</h1>
+    <p class="caps" style="text-align:center;margin:4px 0 0">Accès réservé</p>
+    <label for="email">E-mail</label><input id="email" type="email" autocomplete="username">
+    <label for="mdp">Mot de passe</label><input id="mdp" type="password" autocomplete="current-password">
+    <p style="text-align:center;margin-top:18px"><button class="btn" id="btn-login">Entrer</button></p>
+    <p class="err" id="login-err"></p>
+  </section>
+
+  <section id="app" hidden>
+    <header class="titre">
+      <h1 class="script">Programme du week-end</h1>
+      <p>Cliquer sur un moment pour le modifier. Un cadenas fermé fige l'heure. Les bandes colorées sont les grandes phases ; chaque moment indique dans quelle phase il tombe.</p>
+    </header>
+    <div class="jours" id="jours"></div>
+    <div class="maintenant" id="maintenant"></div>
+    <div class="macro" id="macro"></div>
+    <p class="legende-macro">Barre du jour : phases en couleur, moments en octogones (bordeaux = verrouillé, gris = déplaçable), trait vert = maintenant.</p>
+    <div class="timeline" id="timeline"></div>
+    <p class="info" id="info"></p>
+    <button class="btn ajout" id="btn-ajout">Ajouter un moment</button>
+  </section>
+</main>
+
+<div id="voile" hidden>
+  <form id="fiche">
+    <h2 class="script" id="fiche-titre">Nouveau moment</h2>
+    <label for="f-titre">Nom</label><input id="f-titre" required maxlength="120">
+    <label for="f-desc">Description</label><textarea id="f-desc" rows="4"></textarea>
+    <div class="grille2">
+      <div><label for="f-jour">Jour</label><select id="f-jour"></select></div>
+      <div><label for="f-type">Type</label><select id="f-type"><option value="moment">Moment (activité)</option><option value="phase">Phase (bande de fond)</option></select></div>
+      <div><label for="f-debut">Heure de début</label><input id="f-debut" type="time" required></div>
+      <div><label for="f-duree">Durée (minutes)</label><input id="f-duree" type="number" min="5" step="5" value="30" required></div>
+      <div id="f-couleur-bloc" hidden><label for="f-couleur">Couleur de la phase</label><select id="f-couleur"><option value="gris">Gris (logistique)</option><option value="bordeaux">Bordeaux (cérémonie)</option><option value="petale">Rose (vin d'honneur)</option><option value="feuille">Doré (repas)</option><option value="encre">Sombre (soirée)</option></select></div>
+      <div><label for="f-verrou">Verrouillé</label><select id="f-verrou"><option value="false">Non, déplaçable</option><option value="true">Oui, heure figée</option></select></div>
+    </div>
+    <div class="barre-actions">
+      <button type="button" class="btn secondaire" id="f-suppr" hidden>Supprimer</button>
+      <button type="button" class="btn secondaire" id="f-annuler">Annuler</button>
+      <button type="submit" class="btn">Enregistrer</button>
+    </div>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const CONFIG = {
+  SUPABASE_URL: 'https://wrcjthhrouditgbpjegy.supabase.co',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndyY2p0aGhyb3VkaXRnYnBqZWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0MTIxNDAsImV4cCI6MjEwNDk4ODE0MH0.8Tubv77Ugz5fhPLUl1ZJCa8QA3JVXKtagkeD-0TBXWk',
+  JOURS: [['2026-10-09','Vendredi 9'],['2026-10-10','Samedi 10'],['2026-10-11','Dimanche 11'],['2026-10-12','Lundi 12']],
+  FENETRE: [7, 30]   // heures affichées sur la barre du jour : 7h → 6h le lendemain
+};
+const sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+const $ = s => document.querySelector(s);
+let items = [], jourActif = null, enEdition = null;
+
+/* ---------- temps (réel ou simulé via ?t=2026-10-10T15:00) ---------- */
+const simule = new URLSearchParams(location.search).get('t');
+const decalage = simule ? new Date(simule).getTime() - Date.now() : 0;
+const maintenant = () => new Date(Date.now() + decalage);
+
+/* ---------- connexion ---------- */
+$('#btn-login').onclick = async () => {
+  $('#login-err').textContent = '';
+  const { error } = await sb.auth.signInWithPassword({ email: $('#email').value.trim(), password: $('#mdp').value });
+  if (error) { $('#login-err').textContent = 'Connexion refusée : ' + error.message; return; }
+  demarrer();
+};
+$('#mdp').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-login').click(); });
+sb.auth.getSession().then(({ data }) => { if (data.session) demarrer(); });
+
+async function demarrer(){
+  $('#login').hidden = true; $('#app').hidden = false;
+  CONFIG.JOURS.forEach(([v, l]) => { const o = document.createElement('option'); o.value = v; o.textContent = l; $('#f-jour').appendChild(o); });
+  const auj = dateISO(heureLogique(maintenant()));
+  jourActif = CONFIG.JOURS.some(j => j[0] === auj) ? auj : CONFIG.JOURS[1][0];
+  await charger();
+  setInterval(charger, 30000);
+  setInterval(rendre, 20000);
+}
+
+/* Une "journée" court de 6h à 6h : 2h du matin appartient encore à la veille pour l'affichage. */
+function heureLogique(d){ const x = new Date(d); if (x.getHours() < 6) x.setDate(x.getDate() - 1); return x; }
+function dateISO(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+/* minutes depuis minuit du jour logique (une heure < 6h → +24h) */
+function minutes(it){ const [h, m] = it.debut.split(':').map(Number); return (h < 6 ? h + 24 : h) * 60 + m; }
+function jourLogique(it){ const [h] = it.debut.split(':').map(Number); if (h >= 6) return it.jour; const d = new Date(it.jour + 'T12:00'); d.setDate(d.getDate() - 1); return dateISO(d); }
+function minutesMaintenant(){ const n = maintenant(); const h = n.getHours(); return (h < 6 ? h + 24 : h) * 60 + n.getMinutes(); }
+function fmtH(min){ const h = Math.floor(min / 60) % 24, m = min % 60; return `${h}h${String(m).padStart(2,'0')}`; }
+function fmtDuree(m){ return m < 60 ? `${m} min` : `${Math.floor(m/60)}h${m % 60 ? String(m % 60).padStart(2,'0') : ''}`; }
+
+/* ---------- données ---------- */
+async function charger(){
+  const { data, error } = await sb.from('programme').select('*').order('jour').order('debut');
+  if (error) { $('#info').textContent = 'Erreur : ' + error.message; return; }
+  items = data; rendre();
+}
+
+function duJour(j){ return items.filter(i => jourLogique(i) === j).sort((a, b) => minutes(a) - minutes(b) || (a.type === 'phase' ? -1 : 1)); }
+function phaseDe(it, liste){ const m = minutes(it); return liste.filter(p => p.type === 'phase' && p.id !== it.id && m >= minutes(p) && m < minutes(p) + p.duree).pop(); }
+
+/* ---------- rendu ---------- */
+function rendre(){
+  const auj = dateISO(heureLogique(maintenant()));
+  const nowMin = minutesMaintenant();
+  // onglets
+  const jd = $('#jours'); jd.innerHTML = '';
+  CONFIG.JOURS.forEach(([v, l]) => { const b = document.createElement('button'); b.textContent = l; b.className = (v === jourActif ? 'actif ' : '') + (v === auj ? 'aujourdhui' : ''); b.onclick = () => { jourActif = v; rendre(); }; jd.appendChild(b); });
+
+  const liste = duJour(jourActif);
+  const moments = liste.filter(i => i.type === 'moment');
+  const estAuj = jourActif === auj;
+
+  // bloc "maintenant"
+  const enCours = estAuj ? moments.filter(i => nowMin >= minutes(i) && nowMin < minutes(i) + i.duree) : [];
+  const phaseCourante = estAuj ? liste.filter(i => i.type === 'phase' && nowMin >= minutes(i) && nowMin < minutes(i) + i.duree).pop() : null;
+  const ensuite = estAuj ? moments.find(i => minutes(i) > nowMin) : null;
+  const n = maintenant();
+  $('#maintenant').innerHTML = estAuj
+    ? `<div class="h">${fmtH(n.getHours()*60 + n.getMinutes())}</div>
+       <div class="encours">${phaseCourante ? `<span class="caps" style="font-size:.85rem;color:var(--encre-douce)">${echap(phaseCourante.titre)}</span><br>` : ''}${enCours.length ? 'En cours : <b>' + enCours.map(i => echap(i.titre)).join('</b>, <b>') + '</b>' : 'Rien de programmé en ce moment.'}</div>
+       <div class="ensuite">${ensuite ? `Ensuite : ${echap(ensuite.titre)} à ${fmtH(minutes(ensuite))}, dans ${fmtDuree(minutes(ensuite) - nowMin)}.` : 'Plus rien de prévu pour ce jour.'}</div>
+       ${simule ? `<div class="simule">Heure simulée (${simule}). Retirer ?t= de l'adresse pour l'heure réelle.</div>` : ''}`
+    : `<div class="h">${CONFIG.JOURS.find(j => j[0] === jourActif)[1]}</div><div class="encours">${liste.length ? `${moments.length} moment${moments.length > 1 ? 's' : ''} programmé${moments.length > 1 ? 's' : ''}` : 'Rien de programmé.'}</div><div class="ensuite">${auj < jourActif ? 'À venir.' : auj > jourActif ? 'Passé.' : ''}</div>`;
+
+  // macro-timeline
+  const [h0, h1] = CONFIG.FENETRE, tot = (h1 - h0) * 60;
+  const pos = m => Math.max(0, Math.min(100, (m - h0 * 60) / tot * 100));
+  const mc = $('#macro');
+  mc.innerHTML = `<div class="bandes">${liste.filter(i => i.type === 'phase').map(p => `<div class="bande c-${p.couleur || 'gris'}" data-id="${p.id}" style="left:${pos(minutes(p))}%;width:${Math.max(1, pos(minutes(p) + p.duree) - pos(minutes(p)))}%" title="${echap(p.titre)} ${fmtH(minutes(p))}-${fmtH(minutes(p)+p.duree)}">${echap(p.titre)}</div>`).join('')}</div>
+    <div class="points">${moments.map(m => `<div class="point ${m.verrouille ? '' : 'libre'}" data-id="${m.id}" style="left:${pos(minutes(m))}%" title="${fmtH(minutes(m))} ${echap(m.titre)}"></div>`).join('')}</div>
+    ${estAuj && nowMin >= h0*60 && nowMin <= h1*60 ? `<div class="curseur" style="left:${pos(nowMin)}%"></div>` : ''}
+    <div class="heures">${Array.from({ length: (h1 - h0) / 3 + 1 }, (_, k) => `<span>${fmtH((h0 + 3 * k) * 60)}</span>`).join('')}</div>`;
+  mc.querySelectorAll('[data-id]').forEach(el => el.onclick = () => ouvrir(items.find(i => i.id === el.dataset.id)));
+
+  // timeline verticale
+  const tl = $('#timeline'); tl.innerHTML = '';
+  if (!liste.length) tl.innerHTML = '<p class="info">Rien pour ce jour. Ajoutez un moment.</p>';
+  let ensuiteMarque = false;
+  for (const it of liste) {
+    const d = document.createElement('div');
+    const m = minutes(it), fin = m + it.duree;
+    d.className = 'item ' + it.type + (it.verrouille ? ' verrouille' : '') + (it.type === 'phase' ? ' c-' + (it.couleur || 'gris') : '');
+    if (estAuj && it.type === 'moment') {
+      if (nowMin >= fin) d.classList.add('passe');
+      else if (nowMin >= m) d.classList.add('encours');
+      else if (!ensuiteMarque) { d.classList.add('ensuite-tag'); ensuiteMarque = true; }
+    }
+    const ph = it.type === 'moment' ? phaseDe(it, liste) : null;
+    d.innerHTML = `<div class="heure">${fmtH(m)}<small>${fmtDuree(it.duree)}</small></div>
+      <div class="titre">${echap(it.titre)}</div>
+      ${it.description ? `<div class="desc">${echap(it.description)}</div>` : ''}
+      ${it.type === 'moment' ? `<div class="meta">${fmtH(m)} à ${fmtH(fin)} · <span class="dans">${ph ? 'pendant : ' + echap(ph.titre) : 'hors phase'}</span></div>` : `<div class="meta">${fmtH(m)} à ${fmtH(fin)}</div>`}
+      <div class="outils">
+        <button data-act="-15" ${it.verrouille ? 'disabled' : ''}>−15</button><button data-act="-5" ${it.verrouille ? 'disabled' : ''}>−5</button><button data-act="+5" ${it.verrouille ? 'disabled' : ''}>+5</button><button data-act="+15" ${it.verrouille ? 'disabled' : ''}>+15</button>
+        <button data-act="modif">modifier</button>
+        <button data-act="verrou" class="cadenas ${it.verrouille ? 'ferme' : ''}">${it.verrouille ? 'verrouillé' : 'libre'}</button>
+      </div>`;
+    d.querySelectorAll('[data-act]').forEach(b => b.onclick = ev => { ev.stopPropagation(); action(it, b.dataset.act); });
+    tl.appendChild(d);
+  }
+  $('#info').textContent = 'Mis à jour ' + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + '. Partagé entre tous les témoins, rafraîchi toutes les 30 s.';
+}
+
+/* ---------- actions ---------- */
+async function action(it, act){
+  if (act === 'modif') return ouvrir(it);
+  if (act === 'verrou') return maj(it.id, { verrouille: !it.verrouille });
+  if (it.verrouille) return;
+  const delta = Number(act);
+  let [h, m] = it.debut.split(':').map(Number);
+  let total = h * 60 + m + delta; let jour = it.jour;
+  if (total < 0) { total += 1440; jour = decaler(jour, -1); } if (total >= 1440) { total -= 1440; jour = decaler(jour, 1); }
+  return maj(it.id, { debut: `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`, jour });
+}
+function decaler(j, n){ const d = new Date(j + 'T12:00'); d.setDate(d.getDate() + n); return dateISO(d); }
+async function maj(id, champs){
+  const { error } = await sb.from('programme').update(champs).eq('id', id);
+  if (error) { alert(error.message); return; }
+  await charger();
+}
+
+/* ---------- fiche ---------- */
+$('#btn-ajout').onclick = () => ouvrir(null);
+$('#f-annuler').onclick = () => { $('#voile').hidden = true; };
+$('#voile').addEventListener('click', e => { if (e.target === $('#voile')) $('#voile').hidden = true; });
+$('#f-type').onchange = () => { $('#f-couleur-bloc').hidden = $('#f-type').value !== 'phase'; };
+function ouvrir(it){
+  enEdition = it;
+  $('#fiche-titre').textContent = it ? 'Modifier' : 'Nouveau moment';
+  $('#f-titre').value = it ? it.titre : ''; $('#f-desc').value = it ? (it.description || '') : '';
+  $('#f-jour').value = it ? it.jour : jourActif; $('#f-type').value = it ? it.type : 'moment';
+  $('#f-debut').value = it ? it.debut.slice(0, 5) : ''; $('#f-duree').value = it ? it.duree : 30;
+  $('#f-couleur').value = it && it.couleur ? it.couleur : 'gris'; $('#f-verrou').value = it ? String(it.verrouille) : 'false';
+  $('#f-couleur-bloc').hidden = $('#f-type').value !== 'phase';
+  $('#f-suppr').hidden = !it;
+  $('#voile').hidden = false; $('#f-titre').focus();
+}
+$('#fiche').addEventListener('submit', async e => {
+  e.preventDefault();
+  const champs = { titre: $('#f-titre').value.trim(), description: $('#f-desc').value.trim() || null, jour: $('#f-jour').value, type: $('#f-type').value,
+    debut: $('#f-debut').value, duree: Number($('#f-duree').value), verrouille: $('#f-verrou').value === 'true', couleur: $('#f-type').value === 'phase' ? $('#f-couleur').value : null };
+  if (enEdition && enEdition.verrouille && (champs.debut !== enEdition.debut.slice(0,5) || champs.jour !== enEdition.jour) && champs.verrouille) {
+    if (!confirm('Ce moment est verrouillé. Changer son heure quand même ?')) return;
+  }
+  const q = enEdition ? sb.from('programme').update(champs).eq('id', enEdition.id) : sb.from('programme').insert(champs);
+  const { error } = await q;
+  if (error) { alert(error.message); return; }
+  $('#voile').hidden = true; jourActif = jourLogique({ jour: champs.jour, debut: champs.debut }); await charger();
+});
+$('#f-suppr').onclick = async () => {
+  if (!enEdition) return;
+  if (enEdition.verrouille && !confirm('Ce moment est verrouillé. Supprimer quand même ?')) return;
+  if (!confirm(`Supprimer « ${enEdition.titre} » ?`)) return;
+  const { error } = await sb.from('programme').delete().eq('id', enEdition.id);
+  if (error) { alert(error.message); return; }
+  $('#voile').hidden = true; await charger();
+};
+function echap(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+</script>
+</body>
+</html>
