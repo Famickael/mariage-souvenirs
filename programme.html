@@ -38,6 +38,29 @@
   .jours button{font:inherit;font-variant:small-caps;letter-spacing:.1em;font-weight:600;font-size:.95rem;background:transparent;border:1.5px solid var(--feuille);color:var(--encre-douce);padding:6px 14px;cursor:pointer}
   .jours button.actif{border-color:var(--bordeaux);color:var(--bordeaux);background:#fff8}
   .jours button.aujourdhui::after{content:" •";color:var(--ok)}
+  .vues{display:flex;justify-content:center;gap:0;margin:4px 0 0}
+  .vues button{font:inherit;font-variant:small-caps;letter-spacing:.1em;font-weight:600;font-size:.85rem;background:transparent;border:1.5px solid var(--feuille);color:var(--encre-douce);padding:4px 14px;cursor:pointer}
+  .vues button:first-child{border-right:0}
+  .vues button.actif{background:var(--bordeaux);border-color:var(--bordeaux);color:#fff}
+  /* vue liste */
+  .liste{margin-top:16px}
+  .liste .bloc-phase{margin:18px 0 8px;padding:6px 12px;border-left:4px solid var(--feuille)}
+  .liste .bloc-phase .t{font-family:"Sacramento",cursive;color:var(--bordeaux);font-size:1.7rem;line-height:1}
+  .liste .bloc-phase .m{font-size:.85rem;color:var(--encre-douce);font-style:italic}
+  .liste .bloc-phase .d{font-size:.95rem;margin-top:4px;white-space:pre-wrap}
+  .liste .bloc-phase.c-bordeaux{border-left-color:var(--bordeaux)}.liste .bloc-phase.c-petale{border-left-color:var(--petale)}.liste .bloc-phase.c-feuille{border-left-color:var(--feuille)}.liste .bloc-phase.c-encre{border-left-color:var(--encre)}.liste .bloc-phase.c-gris{border-left-color:var(--gris)}
+  .liste .carte{display:grid;grid-template-columns:58px 1fr;gap:10px;padding:10px 12px;margin:8px 0;background:#fffdf9;border:1px solid var(--papier-fonce);border-left:4px solid var(--bordeaux);cursor:pointer}
+  .liste .carte.libre{border-left-color:var(--encre-douce)}
+  .liste .carte.passe{opacity:.55}
+  .liste .carte.encours{border-color:var(--ok);box-shadow:0 0 0 2px var(--ok)}
+  .liste .carte .h{font-variant:small-caps;letter-spacing:.06em;font-weight:600;font-size:1rem}
+  .liste .carte .h small{display:block;font-variant:normal;letter-spacing:0;font-weight:400;font-size:.75rem;color:var(--encre-douce);font-style:italic}
+  .liste .carte .t{font-weight:600;font-size:1.05rem}
+  .liste .carte .t .tag{font-size:.75rem;font-variant:small-caps;letter-spacing:.06em;color:var(--ok);margin-left:6px}
+  .liste .carte .t .tag.ensuite{color:var(--bordeaux)}
+  .liste .carte .m{font-size:.85rem;color:var(--encre-douce);font-style:italic}
+  .liste .carte .d{font-size:.95rem;margin-top:4px;white-space:pre-wrap}
+  .liste .carte.verrouille .t::after{content:" 🔒";font-size:.75rem}
 
   /* maintenant */
   .maintenant{border:3px double var(--bordeaux);padding:12px 16px;margin:14px 0;background:#fff7;display:grid;grid-template-columns:auto 1fr;gap:6px 16px;align-items:baseline}
@@ -83,7 +106,8 @@
   .planning .col-moments:hover .plus{display:flex}
   .planning .col-moments.survol-moment .plus{display:none}
   .legende-planning{font-size:.8rem;color:var(--encre-douce);font-style:italic;text-align:center;margin-top:6px}
-  @media (max-width:560px){.planning{grid-template-columns:44px 96px 1fr}.planning .phase{font-size:1.1rem;padding:4px 6px}.planning .ligne-h{left:44px}}
+  .planning .moment .t{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  @media (max-width:560px){.planning{grid-template-columns:40px 64px 1fr}.planning .phase{font-size:1rem;padding:3px 4px;left:2px;right:3px}.planning .phase small{display:none}.planning .ligne-h{left:40px}.planning .moment{padding:3px 6px;font-size:.88rem}.planning .moment .m{font-size:.72rem}.planning .plus{display:none!important}}
 
   /* formulaire */
   #voile{position:fixed;inset:0;background:rgba(42,36,38,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:5}
@@ -116,9 +140,11 @@
       <p>Colonne de gauche : les grandes phases. À droite : les moments, à l'échelle du temps. Glisser un moment libre pour le déplacer, cliquer pour le modifier, survoler un créneau vide pour ajouter.</p>
     </header>
     <div class="jours" id="jours"></div>
+    <div class="vues"><button id="vue-liste">Liste</button><button id="vue-planning">Planning</button></div>
     <div class="maintenant" id="maintenant"></div>
     <div class="planning" id="planning"></div>
     <p class="legende-planning">Bordeaux : moment verrouillé. Gris avec poignée : déplaçable (glisser, ou −/+ dans la fiche). Trait vert : maintenant.</p>
+    <div class="liste" id="liste" hidden></div>
     <p class="info" id="info"></p>
     <button class="btn ajout" id="btn-ajout">Ajouter un moment</button>
   </section>
@@ -156,7 +182,8 @@ const CONFIG = {
 };
 const sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 const $ = s => document.querySelector(s);
-let items = [], jourActif = null, enEdition = null;
+let items = [], jourActif = null, enEdition = null, vue = null;
+const TACTILE = matchMedia('(pointer:coarse)').matches;
 
 /* ---------- temps (réel ou simulé via ?t=2026-10-10T15:00) ---------- */
 const simule = new URLSearchParams(location.search).get('t');
@@ -233,7 +260,10 @@ function rendre(){
        ${simule ? `<div class="simule">Heure simulée (${simule}). Retirer ?t= de l'adresse pour l'heure réelle.</div>` : ''}`
     : `<div class="h">${CONFIG.JOURS.find(j => j[0] === jourActif)[1]}</div><div class="encours">${liste.length ? `${moments.length} moment${moments.length > 1 ? 's' : ''} programmé${moments.length > 1 ? 's' : ''}` : 'Rien de programmé.'}</div><div class="ensuite">${auj < jourActif ? 'À venir. Le curseur « maintenant » et le suivi en direct apparaîtront ce jour-là.' : auj > jourActif ? 'Passé.' : ''}</div>`;
 
-  rendrePlanning(liste, moments, estAuj, nowMin);
+  if (vue === null) vue = TACTILE ? 'liste' : 'planning';
+  $('#vue-liste').className = vue === 'liste' ? 'actif' : ''; $('#vue-planning').className = vue === 'planning' ? 'actif' : '';
+  $('#planning').hidden = vue !== 'planning'; $('#planning').nextElementSibling.hidden = vue !== 'planning'; $('#liste').hidden = vue !== 'liste';
+  if (vue === 'planning') rendrePlanning(liste, moments, estAuj, nowMin); else rendreListe(liste, estAuj, nowMin);
   $('#info').textContent = 'Mis à jour ' + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + '. Partagé entre tous les témoins, rafraîchi toutes les 30 s.';
 }
 
@@ -335,6 +365,28 @@ function brancherMoment(el, it){
   el.addEventListener('pointerup', fin); el.addEventListener('pointercancel', fin);
 }
 
+/* ---------- vue liste (téléphone) ---------- */
+function rendreListe(liste, estAuj, nowMin){
+  const el = $('#liste'); el.hidden = false; el.innerHTML = '';
+  if (!liste.length) { el.innerHTML = '<p class="info">Rien pour ce jour. Ajoutez un moment.</p>'; return; }
+  let ensuiteMarque = false;
+  for (const it of liste) {
+    const deb = minutes(it), fin = deb + it.duree;
+    if (it.type === 'phase') {
+      const d = document.createElement('div'); d.className = 'bloc-phase c-' + (it.couleur || 'gris');
+      d.innerHTML = `<div class="t">${echap(it.titre)}</div><div class="m">${fmtH(deb)} à ${fmtH(fin)} · ${fmtDuree(it.duree)}</div>${it.description ? `<div class="d">${echap(it.description)}</div>` : ''}`;
+      d.onclick = () => ouvrir(it); el.appendChild(d); continue;
+    }
+    let cls = 'carte ' + (it.verrouille ? 'verrouille' : 'libre'); let tag = '';
+    if (estAuj) { if (nowMin >= fin) cls += ' passe'; else if (nowMin >= deb) { cls += ' encours'; tag = '<span class="tag">en cours</span>'; } else if (!ensuiteMarque) { tag = '<span class="tag ensuite">ensuite</span>'; ensuiteMarque = true; } }
+    const ph = phaseDe(it, liste);
+    const d = document.createElement('div'); d.className = cls;
+    d.innerHTML = `<div class="h">${fmtH(deb)}<small>${fmtDuree(it.duree)}</small></div>
+      <div><div class="t">${echap(it.titre)}${tag}</div><div class="m">jusqu'à ${fmtH(fin)}${ph ? ' · pendant : ' + echap(ph.titre) : ''}</div>${it.description ? `<div class="d">${echap(it.description)}</div>` : ''}</div>`;
+    d.onclick = () => ouvrir(it); el.appendChild(d);
+  }
+}
+
 /* ---------- actions ---------- */
 async function action(it, act){
   if (act === 'modif') return ouvrir(it);
@@ -355,6 +407,8 @@ async function maj(id, champs){
 
 /* ---------- fiche ---------- */
 $('#btn-ajout').onclick = () => ouvrir(null);
+$('#vue-liste').onclick = () => { vue = 'liste'; rendre(); };
+$('#vue-planning').onclick = () => { vue = 'planning'; rendre(); };
 $('#f-annuler').onclick = () => { $('#voile').hidden = true; };
 $('#voile').addEventListener('click', e => { if (e.target === $('#voile')) $('#voile').hidden = true; });
 document.querySelectorAll('[data-dec]').forEach(b => b.onclick = () => { const v = $('#f-debut').value; if (!v) return; const [h, m] = v.split(':').map(Number); $('#f-debut').value = fmtTime(h * 60 + m + Number(b.dataset.dec)); });
@@ -368,7 +422,7 @@ function ouvrir(it, heure){
   $('#f-couleur').value = it && it.couleur ? it.couleur : 'gris'; $('#f-verrou').value = it ? String(it.verrouille) : 'false';
   $('#f-couleur-bloc').hidden = $('#f-type').value !== 'phase';
   $('#f-suppr').hidden = !it;
-  $('#voile').hidden = false; $('#f-titre').focus();
+  $('#voile').hidden = false; if (!TACTILE) $('#f-titre').focus();
 }
 $('#fiche').addEventListener('submit', async e => {
   e.preventDefault();
