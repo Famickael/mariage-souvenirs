@@ -146,7 +146,12 @@ $('#form-login').addEventListener('submit', async e => {
   if (error) { $('#login-err').textContent = 'Connexion refusée : ' + error.message; return; }
   demarrer();
 });
-sb.auth.getSession().then(({ data }) => { if (data.session) demarrer(); });
+/* Démarre directement ; si la base refuse la lecture anonyme, on repasse par la connexion. */
+sb.auth.getSession().then(async ({ data }) => {
+  if (data.session) return demarrer();
+  const { error } = await sb.from('envois').select('id').limit(1);
+  if (!error) demarrer();
+});
 
 async function demarrer(){
   $('#login').hidden = true; $('#scene').hidden = false;
