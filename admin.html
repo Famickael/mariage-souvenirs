@@ -46,6 +46,13 @@
   .carte .actions .suppr{margin-left:auto;color:var(--encre-douce)}
   .carte .actions .suppr:hover{color:var(--bordeaux)}
   .carte.supprime{opacity:.35;pointer-events:none}
+  .carte.masque .apercu{filter:grayscale(1) opacity(.45)}
+  .interrupteur{font:inherit;font-size:.85rem;font-variant:small-caps;letter-spacing:.08em;font-weight:600;border:1.5px solid var(--feuille);background:transparent;color:var(--encre-douce);padding:3px 8px;cursor:pointer}
+  .interrupteur.actif{border-color:var(--ok);color:var(--ok)}
+  .lien-modif{font:inherit;font-size:.85rem;font-variant:small-caps;letter-spacing:.08em;font-weight:600;background:none;border:0;color:var(--bordeaux);cursor:pointer;padding:0}
+  .envoi header .actions-envoi{align-items:center}
+  .mot-ligne{display:flex;gap:10px;align-items:flex-start;margin:10px 0}
+  .mot-ligne .mot{flex:1;margin:0}
   .envoi header .actions-envoi{display:flex;gap:8px}
   #visionneuse{position:fixed;inset:0;background:rgba(42,36,38,.92);display:flex;align-items:center;justify-content:center;z-index:9;padding:20px}
   #visionneuse[hidden]{display:none}
@@ -74,6 +81,7 @@
       <button class="btn" id="btn-zip">Tout télécharger (zip)</button>
       <button class="btn secondaire" id="btn-csv">Exporter les mots (CSV)</button>
       <button class="btn secondaire" id="btn-refresh">Actualiser</button>
+      <a class="btn secondaire" href="projection.html" target="_blank" style="text-decoration:none">Ouvrir la projection</a>
       <span class="spacer"></span>
       <span class="stat" id="stat"></span>
     </div>
@@ -114,8 +122,20 @@ async function charger(){
   if (!envois.length) { cont.innerHTML = '<p class="vide">Aucun envoi pour le moment.</p>'; return; }
   for (const e of envois) {
     const sec = document.createElement('section'); sec.className = 'envoi';
-    sec.innerHTML = `<header><h2>${echap(e.invite_nom || 'Invité anonyme')}</h2><span class="date">${dateFr(e.created_at)} · ${e.appareil || ''}</span><span class="actions-envoi"><button class="btn secondaire" data-suppr-envoi>Supprimer l'envoi</button></span></header>`
-      + (e.message ? `<div class="mot">${echap(e.message)}</div>` : '');
+    sec.innerHTML = `<header><h2>${echap(e.invite_nom || 'Invité anonyme')} <button class="lien-modif" data-modif-nom>modifier</button></h2><span class="date">${dateFr(e.created_at)} · ${e.appareil || ''}</span><span class="actions-envoi"><button class="interrupteur ${e.visible !== false ? 'actif' : ''}" data-vis-envoi>${e.visible !== false ? 'Projeté' : 'Non projeté'}</button><button class="btn secondaire" data-suppr-envoi>Supprimer l'envoi</button></span></header>`
+      + `<div class="mot-ligne">${e.message ? `<div class="mot">${echap(e.message)}</div>` : '<span class="msg">Pas de mot global.</span>'}<button class="lien-modif" data-modif-mot>${e.message ? 'modifier' : 'ajouter'}</button></div>`;
+    sec.querySelector('[data-modif-nom]').onclick = async () => {
+      const v = prompt('Nom de l\'invité affiché à la projection :', e.invite_nom || ''); if (v === null) return;
+      const { error } = await sb.from('envois').update({ invite_nom: v.trim() || null }).eq('id', e.id); if (error) { alert(error.message); return; } charger();
+    };
+    sec.querySelector('[data-modif-mot]').onclick = async () => {
+      const v = prompt('Mot global de l\'invité (vide pour le retirer de la projection) :', e.message || ''); if (v === null) return;
+      const { error } = await sb.from('envois').update({ message: v.trim() || null }).eq('id', e.id); if (error) { alert(error.message); return; } charger();
+    };
+    sec.querySelector('[data-vis-envoi]').onclick = async () => {
+      const vis = e.visible === false;
+      const { error } = await sb.from('envois').update({ visible: vis }).eq('id', e.id); if (error) { alert(error.message); return; } charger();
+    };
     sec.querySelector('[data-suppr-envoi]').onclick = async () => {
       if (!confirm(`Supprimer tout l'envoi de ${e.invite_nom || 'cet invité'} (${e.fichiers.length} fichier(s)) ? Cette action est définitive.`)) return;
       if (e.fichiers.length) { const { error } = await sb.storage.from(CONFIG.BUCKET).remove(e.fichiers.map(f => f.chemin)); if (error) { alert(error.message); return; } }
@@ -137,6 +157,13 @@ async function charger(){
         ap.onclick = () => voir(f, url);
         const infos = document.createElement('div'); infos.className = 'infos';
         infos.innerHTML = `<div class="nom">${echap(f.nom_original)}</div><div class="msg">${taille(f.taille || 0)}</div>` + (f.message ? `<div class="mot" style="margin:6px 0 0;padding:4px 8px">${echap(f.message)}</div>` : '');
+        if (f.visible === false) carte.classList.add('masque');
+        const ligne2 = document.createElement('div'); ligne2.className = 'actions';
+        const inter = document.createElement('button'); inter.className = 'interrupteur' + (f.visible === false ? '' : ' actif'); inter.textContent = f.visible === false ? 'Non projeté' : 'Projeté';
+        inter.onclick = async () => { const vis = f.visible === false; const { error } = await sb.from('fichiers').update({ visible: vis }).eq('id', f.id); if (error) { alert(error.message); return; } f.visible = vis; inter.className = 'interrupteur' + (vis ? ' actif' : ''); inter.textContent = vis ? 'Projeté' : 'Non projeté'; carte.classList.toggle('masque', !vis); };
+        const mod = document.createElement('button'); mod.className = 'lien-modif'; mod.textContent = f.message ? 'modifier le mot' : 'ajouter un mot'; mod.style.marginLeft = 'auto';
+        mod.onclick = async () => { const v = prompt('Mot affiché sous ce fichier :', f.message || ''); if (v === null) return; const { error } = await sb.from('fichiers').update({ message: v.trim() || null }).eq('id', f.id); if (error) { alert(error.message); return; } charger(); };
+        ligne2.append(inter, mod);
         const act = document.createElement('div'); act.className = 'actions';
         const dl = document.createElement('a'); dl.href = '#'; dl.textContent = 'Télécharger';
         dl.onclick = async ev => { ev.preventDefault(); const { data, error } = await sb.storage.from(CONFIG.BUCKET).createSignedUrl(f.chemin, 3600, { download: f.nom_original }); if (error) { alert(error.message); return; } window.open(data.signedUrl, '_blank'); };
@@ -148,7 +175,7 @@ async function charger(){
           const { error: e2 } = await sb.from('fichiers').delete().eq('id', f.id); if (e2) { alert(e2.message); return; }
           e.fichiers = e.fichiers.filter(x => x.id !== f.id); carte.remove(); majStat();
         };
-        act.append(dl, sup); carte.append(ap, infos, act); gal.appendChild(carte);
+        act.append(dl, sup); carte.append(ap, infos, ligne2, act); gal.appendChild(carte);
       });
       sec.appendChild(gal);
     } else sec.insertAdjacentHTML('beforeend', '<p class="msg">Mot seul, sans fichier.</p>');
