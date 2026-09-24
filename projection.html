@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Aude et Jérémie · Projection</title>
+<link href="https://fonts.googleapis.com/css2?family=Sacramento&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+  :root{--papier:#f3efe7;--papier-fonce:#e9e2d6;--bordeaux:#9a2e3c;--bordeaux-fonce:#7d2431;--encre:#2a2426;--encre-douce:#6b6062;--feuille:#c4b295;--petale:#d98a93}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--papier);color:var(--encre);font-family:"Cormorant Garamond",Georgia,serif;overflow:hidden}
+  body{background-image:radial-gradient(circle at 20% 10%,rgba(255,255,255,.6),transparent 45%),radial-gradient(circle at 80% 90%,rgba(196,178,149,.22),transparent 50%)}
+  body.plein{cursor:none}
+  .script{font-family:"Sacramento",cursive;color:var(--bordeaux);font-weight:400;line-height:1}
+  .caps{font-variant:small-caps;letter-spacing:.16em;font-weight:500}
+
+  /* connexion */
+  #login{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+  #login[hidden]{display:none}
+  #login form{width:min(380px,90vw)}
+  #login h1{font-size:3.4rem;margin:0 0 4px;text-align:center}
+  label{display:block;font-variant:small-caps;letter-spacing:.1em;font-weight:600;font-size:1rem;margin:14px 0 4px}
+  input{font:inherit;font-size:1.05rem;padding:8px;border:0;border-bottom:1.5px solid var(--feuille);background:#fff9;width:100%}
+  .btn{font:inherit;font-variant:small-caps;letter-spacing:.14em;font-weight:600;font-size:1.05rem;cursor:pointer;border:2px solid var(--bordeaux);background:var(--bordeaux);color:#fff;padding:10px 22px;margin-top:18px}
+  .err{color:var(--bordeaux);font-style:italic}
+
+  /* scène */
+  #scene{position:absolute;inset:0}
+  #scene[hidden]{display:none}
+  .coin{position:absolute;width:26vmin;height:26vmin;opacity:.9;pointer-events:none}
+  .coin.hg{top:-3vmin;left:-3vmin}
+  .coin.bd{bottom:-3vmin;right:-3vmin;transform:rotate(180deg)}
+  .bandeau{position:absolute;left:0;right:0;bottom:2.6vmin;text-align:center;pointer-events:none}
+  .bandeau .script{font-size:5vmin}
+  .bandeau .caps{font-size:1.7vmin;color:var(--encre-douce);display:block;margin-top:.4vmin}
+
+  .diapo{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;opacity:0;transition:opacity 1.4s ease}
+  .diapo.visible{opacity:1}
+  .diapo.sortie{opacity:0}
+
+  /* photo dans l'octogone */
+  .cadre{position:relative;width:min(78vh,78vw);aspect-ratio:1}
+  .cadre .octo{position:absolute;inset:0;clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%);background:var(--bordeaux);padding:.8vmin}
+  .cadre .octo-inner{width:100%;height:100%;clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%);background:var(--papier);padding:.7vmin}
+  .cadre .media{width:100%;height:100%;clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%);overflow:hidden;background:var(--papier-fonce)}
+  .cadre img,.cadre video{width:100%;height:100%;object-fit:cover;display:block}
+  .cadre img{animation:ken 14s ease-in-out both}
+  @keyframes ken{from{transform:scale(1.02) translate(0,0)}to{transform:scale(1.12) translate(-1.5%,1.5%)}}
+  .cadre .fleurs{position:absolute;inset:-12%;pointer-events:none}
+  .legende{margin-top:2.6vmin;text-align:center;max-width:80vw}
+  .legende .de{font-size:1.9vmin}
+  .legende .nom{font-size:6vmin;display:block}
+  .legende .mot{font-size:2.9vmin;font-style:italic;color:var(--encre);margin-top:1vmin;line-height:1.35}
+
+  /* mot seul */
+  .carton{position:relative;max-width:70vw;padding:6vmin 7vmin;border:.5vmin double var(--bordeaux);background:rgba(255,255,255,.35);text-align:center}
+  .carton .guill{font-family:"Sacramento",cursive;color:var(--petale);font-size:12vmin;line-height:0;position:absolute;left:3vmin;top:5vmin}
+  .carton .texte{font-size:4.2vmin;font-style:italic;line-height:1.4;white-space:pre-wrap}
+  .carton .signature{font-size:6vmin;margin-top:3vmin;display:block}
+
+  .nouveau{position:absolute;top:3vmin;left:50%;transform:translateX(-50%);background:var(--bordeaux);color:#fff;padding:.9vmin 3vmin;font-variant:small-caps;letter-spacing:.2em;font-size:2vmin;animation:pop .8s ease both}
+  @keyframes pop{from{opacity:0;transform:translate(-50%,-2vmin)}to{opacity:1;transform:translate(-50%,0)}}
+
+  .attente{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+  .attente .script{font-size:12vmin}
+  .attente .caps{font-size:2.4vmin;margin-top:2vmin}
+  .attente .qr{margin-top:4vmin;font-size:2vmin;color:var(--encre-douce);font-style:italic}
+
+  #aide{position:absolute;top:1.5vmin;right:2vmin;font-size:1.6vmin;color:var(--encre-douce);font-style:italic;background:rgba(243,239,231,.85);padding:.6vmin 1.2vmin;transition:opacity .5s}
+  body.plein #aide{opacity:0}
+  #pause{position:absolute;top:1.5vmin;left:2vmin;font-variant:small-caps;letter-spacing:.14em;color:var(--bordeaux);font-size:2vmin;display:none}
+  body.enpause #pause{display:block}
+  @media (prefers-reduced-motion:reduce){.cadre img{animation:none}}
+</style>
+</head>
+<body>
+
+<section id="login">
+  <form id="form-login">
+    <h1 class="script">Projection</h1>
+    <p class="caps" style="text-align:center;margin:0">Accès organisateur</p>
+    <label for="email">E-mail</label><input id="email" type="email" autocomplete="username">
+    <label for="mdp">Mot de passe</label><input id="mdp" type="password" autocomplete="current-password">
+    <p style="text-align:center"><button class="btn" type="submit">Lancer la projection</button></p>
+    <p class="err" id="login-err"></p>
+  </form>
+</section>
+
+<section id="scene" hidden>
+  <svg class="coin hg" viewBox="0 0 200 200" aria-hidden="true">
+    <g stroke="var(--feuille)" stroke-width="1" fill="var(--feuille)" fill-opacity=".5">
+      <path d="M40 60 q-30 10 -34 42 q30 -6 34 -42z"/><path d="M58 46 q-34 -6 -52 22 q32 8 52 -22z"/><path d="M110 30 q-28 -14 -58 0 q28 18 58 0z"/>
+    </g>
+    <g fill="var(--petale)" fill-opacity=".8"><circle cx="78" cy="24" r="11"/><circle cx="92" cy="32" r="8"/><circle cx="68" cy="36" r="7"/></g>
+    <g fill="var(--bordeaux)" fill-opacity=".7"><circle cx="122" cy="16" r="3"/><circle cx="134" cy="26" r="2.5"/></g>
+  </svg>
+  <svg class="coin bd" viewBox="0 0 200 200" aria-hidden="true">
+    <g stroke="var(--feuille)" stroke-width="1" fill="var(--feuille)" fill-opacity=".5">
+      <path d="M40 60 q-30 10 -34 42 q30 -6 34 -42z"/><path d="M58 46 q-34 -6 -52 22 q32 8 52 -22z"/><path d="M110 30 q-28 -14 -58 0 q28 18 58 0z"/>
+    </g>
+    <g fill="var(--petale)" fill-opacity=".8"><circle cx="78" cy="24" r="11"/><circle cx="92" cy="32" r="8"/><circle cx="68" cy="36" r="7"/></g>
+    <g fill="var(--bordeaux)" fill-opacity=".7"><circle cx="122" cy="16" r="3"/><circle cx="134" cy="26" r="2.5"/></g>
+  </svg>
+
+  <div id="diapos"></div>
+
+  <div class="bandeau"><span class="script">Aude et Jérémie</span><span class="caps">10 octobre 2026 · partagez vos souvenirs sur famickael.github.io/mariage-souvenirs</span></div>
+  <div id="aide">F plein écran · espace pause · ← → naviguer · V vidéos oui/non · R recharger</div>
+  <div id="pause">Pause</div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const CONFIG = {
+  SUPABASE_URL: 'https://wrcjthhrouditgbpjegy.supabase.co',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndyY2p0aGhyb3VkaXRnYnBqZWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0MTIxNDAsImV4cCI6MjEwNDk4ODE0MH0.8Tubv77Ugz5fhPLUl1ZJCa8QA3JVXKtagkeD-0TBXWk',
+  BUCKET: 'mariage',
+  DUREE_PHOTO: 9000, DUREE_MOT: 11000, DUREE_VIDEO_MAX: 45000,
+  RAFRAICHIR: 20000,
+  LARGEUR_IMAGE: 1600
+};
+const sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+const $ = s => document.querySelector(s);
+
+let items = [];            // tous les éléments projetables, dans l'ordre de passage
+let connus = new Set();    // ids déjà vus (pour détecter les nouveautés)
+let file = [];             // ordre de lecture courant
+let nouveaux = [];         // éléments arrivés pendant la soirée, à passer en priorité
+let position = -1, timer = null, enPause = false, avecVideos = true, premierChargement = true, courant = null;
+
+/* ---------- connexion ---------- */
+$('#form-login').addEventListener('submit', async e => {
+  e.preventDefault(); $('#login-err').textContent = '';
+  const { error } = await sb.auth.signInWithPassword({ email: $('#email').value.trim(), password: $('#mdp').value });
+  if (error) { $('#login-err').textContent = 'Connexion refusée : ' + error.message; return; }
+  demarrer();
+});
+sb.auth.getSession().then(({ data }) => { if (data.session) demarrer(); });
+
+async function demarrer(){
+  $('#login').hidden = true; $('#scene').hidden = false;
+  await charger();
+  setInterval(charger, CONFIG.RAFRAICHIR);
+  suivant();
+}
+
+/* ---------- données ---------- */
+async function charger(){
+  const { data, error } = await sb.from('envois').select('*, fichiers(*)').order('created_at', { ascending: true });
+  if (error) { console.error(error); return; }
+  const liste = [];
+  const fichiersImg = [];
+  for (const e of data) {
+    if (e.visible === false) continue;
+    const nom = e.invite_nom || 'Un invité';
+    if (e.message && e.message.trim()) liste.push({ id: 'm-' + e.id, type: 'mot', nom, texte: e.message.trim(), date: e.created_at });
+    for (const f of e.fichiers) {
+      if (f.visible === false) continue;
+      const t = f.type_mime || '';
+      if (t.startsWith('image/')) { const it = { id: 'f-' + f.id, type: 'photo', nom, texte: f.message, chemin: f.chemin, date: f.created_at }; liste.push(it); fichiersImg.push(it); }
+      else if (t.startsWith('video/')) liste.push({ id: 'f-' + f.id, type: 'video', nom, texte: f.message, chemin: f.chemin, date: f.created_at });
+    }
+  }
+  // URLs signées (12 h), images redimensionnées et converties (HEIC compris) par Supabase
+  const media = liste.filter(i => i.chemin);
+  if (media.length) {
+    const { data: signes } = await sb.storage.from(CONFIG.BUCKET).createSignedUrls(media.map(i => i.chemin), 43200);
+    media.forEach((i, k) => { i.url = signes && signes[k] ? signes[k].signedUrl : null; });
+    for (const i of fichiersImg) {
+      try { const { data: d } = await sb.storage.from(CONFIG.BUCKET).createSignedUrl(i.chemin, 43200, { transform: { width: CONFIG.LARGEUR_IMAGE, quality: 80 } }); if (d) i.urlImg = d.signedUrl; } catch {}
+    }
+  }
+  const arrives = liste.filter(i => !connus.has(i.id));
+  liste.forEach(i => connus.add(i.id));
+  items = liste;
+  if (premierChargement) { premierChargement = false; file = melanger(items); }
+  else if (arrives.length) { arrives.forEach(i => { i.nouveau = true; }); nouveaux.push(...arrives); }
+  // retirer de la file ce qui n'est plus projetable
+  const ids = new Set(items.map(i => i.id));
+  file = file.filter(i => ids.has(i.id)).map(i => items.find(x => x.id === i.id));
+}
+
+function melanger(a){ const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
+
+/* ---------- lecture ---------- */
+function prochain(){
+  while (nouveaux.length) { const n = nouveaux.shift(); if (avecVideos || n.type !== 'video') { file.splice(position + 1, 0, n); return file[++position]; } }
+  if (!file.length) return null;
+  for (let k = 0; k < file.length; k++) {
+    position = (position + 1) % file.length;
+    if (position === 0) file = melanger(items);
+    const it = file[position];
+    if (it && (avecVideos || it.type !== 'video')) return it;
+  }
+  return null;
+}
+function precedent(){
+  if (!file.length) return null;
+  position = (position - 1 + file.length) % file.length;
+  return file[position];
+}
+
+function suivant(){ clearTimeout(timer); afficher(prochain()); }
+function afficher(it){
+  const cont = $('#diapos');
+  const ancien = cont.firstElementChild;
+  if (ancien) { ancien.classList.remove('visible'); ancien.classList.add('sortie'); setTimeout(() => ancien.remove(), 1500); }
+  courant = it;
+  const d = document.createElement('div'); d.className = 'diapo';
+  if (!it) {
+    d.innerHTML = `<div class="attente"><span class="script">Aude et Jérémie</span><span class="caps">Vos photos, vidéos et mots apparaîtront ici</span><span class="qr">famickael.github.io/mariage-souvenirs</span></div>`;
+    cont.appendChild(d); requestAnimationFrame(() => d.classList.add('visible'));
+    timer = setTimeout(suivant, 8000); return;
+  }
+  const nouveau = it.nouveau ? `<div class="nouveau">Nouveau souvenir de ${echap(it.nom)}</div>` : '';
+  it.nouveau = false;
+  let duree = CONFIG.DUREE_PHOTO;
+  if (it.type === 'mot') {
+    duree = Math.min(CONFIG.DUREE_MOT + it.texte.length * 40, 25000);
+    d.innerHTML = nouveau + `<div class="carton"><span class="guill">“</span><div class="texte">${echap(it.texte)}</div><span class="signature script">${echap(it.nom)}</span></div>`;
+  } else {
+    const media = it.type === 'photo'
+      ? `<img src="${it.urlImg || it.url}" alt="" onerror="this.onerror=null;this.src='${it.url}'">`
+      : `<video src="${it.url}" autoplay muted playsinline></video>`;
+    d.innerHTML = nouveau + `<div class="cadre">
+        <svg class="fleurs" viewBox="0 0 368 368" aria-hidden="true">
+          <g stroke="var(--feuille)" stroke-width="1.2" fill="var(--feuille)" fill-opacity=".55"><path d="M60 70 q-30 10 -34 42 q30 -6 34 -42z"/><path d="M78 56 q-34 -6 -52 22 q32 8 52 -22z"/><path d="M300 300 q30 -10 34 -42 q-30 6 -34 42z"/><path d="M284 316 q34 6 52 -22 q-32 -8 -52 22z"/><path d="M200 338 q-28 -14 -58 0 q28 18 58 0z"/></g>
+          <g fill="var(--petale)" fill-opacity=".8"><circle cx="96" cy="44" r="12"/><circle cx="110" cy="52" r="9"/><circle cx="86" cy="56" r="8"/><circle cx="262" cy="324" r="12"/><circle cx="248" cy="316" r="9"/><circle cx="272" cy="312" r="8"/></g>
+        </svg>
+        <div class="octo"><div class="octo-inner"><div class="media">${media}</div></div></div>
+      </div>
+      <div class="legende"><span class="de caps">déposé par</span><span class="nom script">${echap(it.nom)}</span>${it.texte ? `<div class="mot">${echap(it.texte)}</div>` : ''}</div>`;
+    if (it.type === 'video') {
+      const v = d.querySelector('video');
+      v.addEventListener('ended', () => { if (!enPause) suivant(); });
+      v.addEventListener('error', () => suivant());
+      duree = CONFIG.DUREE_VIDEO_MAX;
+    }
+  }
+  cont.appendChild(d);
+  requestAnimationFrame(() => d.classList.add('visible'));
+  if (!enPause) timer = setTimeout(suivant, duree);
+}
+
+/* ---------- commandes ---------- */
+document.addEventListener('keydown', e => {
+  if (!$('#login').hidden) return;
+  switch (e.key) {
+    case 'f': case 'F': pleinEcran(); break;
+    case ' ': e.preventDefault(); enPause = !enPause; document.body.classList.toggle('enpause', enPause); if (enPause) clearTimeout(timer); else suivant(); break;
+    case 'ArrowRight': suivant(); break;
+    case 'ArrowLeft': clearTimeout(timer); afficher(precedent()); break;
+    case 'v': case 'V': avecVideos = !avecVideos; $('#aide').textContent = avecVideos ? 'Vidéos activées' : 'Vidéos désactivées'; setTimeout(() => $('#aide').textContent = 'F plein écran · espace pause · ← → naviguer · V vidéos oui/non · R recharger', 2000); break;
+    case 'r': case 'R': charger(); break;
+  }
+});
+$('#scene').addEventListener('dblclick', pleinEcran);
+function pleinEcran(){
+  if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(() => {}); }
+  else document.exitFullscreen();
+}
+document.addEventListener('fullscreenchange', () => document.body.classList.toggle('plein', !!document.fullscreenElement));
+function echap(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+</script>
+</body>
+</html>
