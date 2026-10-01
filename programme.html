@@ -34,7 +34,8 @@
   header.titre p{margin:4px 0 0;color:var(--encre-douce);font-style:italic}
 
   /* onglets jours */
-  .jours{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:18px 0 8px}
+  .jours{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin:18px 0 8px}
+  @media (max-width:560px){.jours{grid-template-columns:repeat(3,1fr)}}
   .jours button{font:inherit;font-variant:small-caps;letter-spacing:.08em;font-weight:600;font-size:.92rem;background:transparent;border:1.5px solid var(--feuille);color:var(--encre-douce);padding:7px 4px;cursor:pointer;white-space:nowrap}
   .jours button.actif{border-color:var(--bordeaux);color:var(--bordeaux);background:#fff8}
   .jours button.aujourdhui::after{content:" •";color:var(--ok)}
@@ -180,8 +181,8 @@
 const CONFIG = {
   SUPABASE_URL: 'https://wrcjthhrouditgbpjegy.supabase.co',
   SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndyY2p0aGhyb3VkaXRnYnBqZWd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0MTIxNDAsImV4cCI6MjEwNDk4ODE0MH0.8Tubv77Ugz5fhPLUl1ZJCa8QA3JVXKtagkeD-0TBXWk',
-  JOURS: [['2026-10-09','Vendredi 9'],['2026-10-10','Samedi 10'],['2026-10-11','Dimanche 11'],['2026-10-12','Lundi 12']],
-  FENETRE: [7, 30]   // heures affichées sur la barre du jour : 7h → 6h le lendemain
+  JOURS: [['2026-10-07','Mer. 7'],['2026-10-08','Jeu. 8'],['2026-10-09','Ven. 9'],['2026-10-10','Sam. 10'],['2026-10-11','Dim. 11'],['2026-10-12','Lun. 12']],
+  FENETRE: [6, 30]   // heures affichées sur la barre du jour : 7h → 6h le lendemain
 };
 const sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 const $ = s => document.querySelector(s);
@@ -211,7 +212,7 @@ async function demarrer(){
   $('#login').hidden = true; $('#app').hidden = false;
   CONFIG.JOURS.forEach(([v, l]) => { const o = document.createElement('option'); o.value = v; o.textContent = l; $('#f-jour').appendChild(o); });
   const auj = dateISO(heureLogique(maintenant()));
-  jourActif = CONFIG.JOURS.some(j => j[0] === auj) ? auj : CONFIG.JOURS[1][0];
+  jourActif = CONFIG.JOURS.some(j => j[0] === auj) ? auj : '2026-10-10';
   await charger();
   setInterval(charger, 30000);
   setInterval(rendre, 20000);
