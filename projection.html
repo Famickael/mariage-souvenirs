@@ -35,53 +35,29 @@
   .bandeau .script{font-size:4vmin}
   .bandeau .caps{font-size:1.5vmin;color:var(--encre-douce);display:block;margin-top:.2vmin}
 
-  .diapo{position:absolute;inset:0;padding:3vmin 4vmin 11vmin;display:flex;align-items:center;justify-content:center;flex-direction:column;opacity:0;transition:opacity 1.4s ease}
-  .diapo.visible{opacity:1}
+  /* pile de photos */
+  #diapos{position:absolute;inset:3vmin 4vmin 10vmin;display:flex;align-items:center;justify-content:center}
+  .diapo{position:absolute;max-width:100%;max-height:100%;display:flex;align-items:center;justify-content:center;
+    opacity:0;transform:translate(var(--dx,0),var(--dy,0)) rotate(var(--rot,0deg)) scale(1.06);
+    transition:opacity .7s ease,transform .9s cubic-bezier(.2,.8,.2,1),filter 1.2s ease}
+  .diapo.visible{opacity:1;transform:translate(var(--dx,0),var(--dy,0)) rotate(var(--rot,0deg)) scale(1)}
+  .diapo.dessous{filter:brightness(.82) saturate(.8);transition:filter 1.2s ease,opacity 1.2s ease}
   .diapo.sortie{opacity:0}
-
-  /* photo dans l'octogone */
-  .cadre{position:relative;width:min(76vh,70vw);aspect-ratio:1;flex:none}
-  .cadre .octo{position:absolute;inset:0;clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%);background:var(--bordeaux);padding:.8vmin}
-  .cadre .octo-inner{width:100%;height:100%;clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%);background:var(--papier);padding:.7vmin}
-  .cadre .media{width:100%;height:100%;clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%);overflow:hidden;background:var(--papier-fonce)}
-  .cadre img,.cadre video{width:100%;height:100%;object-fit:cover;display:block}
-  .cadre img{animation:ken 14s ease-in-out both}
-  @keyframes ken{from{transform:scale(1.02) translate(0,0)}to{transform:scale(1.12) translate(-1.5%,1.5%)}}
-  .cadre .fleurs{position:absolute;inset:-12%;pointer-events:none}
-  .diapo.avec-mot{flex-direction:row;gap:5vmin;padding-left:6vmin;padding-right:6vmin}
-  .diapo.avec-mot .cadre{width:min(78vh,54vw)}
-  .legende{margin-top:2vmin;text-align:center;max-width:82vw;max-height:20vh;overflow:hidden}
-  .diapo.avec-mot .legende{margin-top:0;flex:1;max-width:40vw;max-height:80vh;text-align:left;display:flex;flex-direction:column;justify-content:center}
-  .legende .qui{font-size:2vmin;color:var(--encre-douce)}
-  .legende .qui .nom{font-family:"Sacramento",cursive;color:var(--bordeaux);font-size:3.6vmin;margin-left:.6vmin;letter-spacing:0;font-variant:normal}
-  .legende .mot{font-size:4.4vmin;font-style:italic;color:var(--encre);margin-bottom:2vmin;line-height:1.3;white-space:pre-wrap;overflow:hidden}
-  .diapo.avec-mot .mot::before{content:"“";font-family:"Sacramento",cursive;color:var(--petale);font-size:9vmin;line-height:0;display:block;margin:2vmin 0 3vmin -1vmin}
-  @media (max-aspect-ratio:1/1){
-    .diapo.avec-mot{flex-direction:column;padding-left:4vmin;padding-right:4vmin}
-    .diapo.avec-mot .cadre{width:min(56vh,80vw)}
-    .diapo.avec-mot .legende{max-width:82vw;max-height:24vh;text-align:center;margin-top:2vmin}
-    .diapo.avec-mot .mot::before{display:none}
-  }
-
-  /* mot seul */
-  .carton{position:relative;max-width:70vw;padding:6vmin 7vmin;border:.5vmin double var(--bordeaux);background:rgba(255,255,255,.35);text-align:center}
-  .carton .guill{font-family:"Sacramento",cursive;color:var(--petale);font-size:12vmin;line-height:0;position:absolute;left:3vmin;top:5vmin}
-  .carton .texte{font-size:4.2vmin;font-style:italic;line-height:1.4;white-space:pre-wrap}
-  .carton .signature{font-size:6vmin;margin-top:3vmin;display:block}
-
-  .nouveau{position:absolute;top:3vmin;left:50%;transform:translateX(-50%);background:var(--bordeaux);color:#fff;padding:.9vmin 3vmin;font-variant:small-caps;letter-spacing:.2em;font-size:2vmin;animation:pop .8s ease both}
-  @keyframes pop{from{opacity:0;transform:translate(-50%,-2vmin)}to{opacity:1;transform:translate(-50%,0)}}
-
-  .attente{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
-  .attente .script{font-size:12vmin}
-  .attente .caps{font-size:2.4vmin;margin-top:2vmin}
-  .attente .qr{margin-top:4vmin;font-size:2vmin;color:var(--encre-douce);font-style:italic}
-
-  #aide{position:absolute;top:1.5vmin;right:2vmin;font-size:1.6vmin;color:var(--encre-douce);font-style:italic;background:rgba(243,239,231,.85);padding:.6vmin 1.2vmin;transition:opacity .5s}
-  body.plein #aide{opacity:0}
-  #pause{position:absolute;top:1.5vmin;left:2vmin;font-variant:small-caps;letter-spacing:.14em;color:var(--bordeaux);font-size:2vmin;display:none}
-  body.enpause #pause{display:block}
-  @media (prefers-reduced-motion:reduce){.cadre img{animation:none}}
+  /* photo au format réel, bord papier + filet bordeaux */
+  .cadre{position:relative;background:#fff;padding:1.2vmin;box-shadow:0 1.2vmin 4vmin rgba(42,36,38,.35),0 .2vmin .6vmin rgba(42,36,38,.25);
+    max-width:calc(100vw - 8vmin);max-height:calc(100vh - 13vmin)}
+  .cadre .media{position:relative;outline:.35vmin solid var(--bordeaux);outline-offset:-.35vmin;background:var(--papier-fonce);line-height:0}
+  .cadre img,.cadre video{display:block;max-width:calc(100vw - 11vmin);max-height:calc(100vh - 16vmin);width:auto;height:auto;object-fit:contain}
+  .cadre img{min-width:40vmin;min-height:30vmin}
+  .cadre video{min-width:60vmin;min-height:34vmin}
+  /* légende sur la photo, en bas à droite */
+  .legende{position:absolute;right:2.2vmin;bottom:2.2vmin;max-width:min(60%,70vmin);background:rgba(255,255,255,.92);padding:1.3vmin 1.8vmin 1.1vmin;
+    text-align:right;box-shadow:0 .3vmin 1.2vmin rgba(0,0,0,.25);border-left:.4vmin solid var(--bordeaux)}
+  .legende .mot{font-size:2.6vmin;font-style:italic;color:var(--encre);line-height:1.3;white-space:pre-wrap;margin-bottom:.4vmin;max-height:22vh;overflow:hidden}
+  .legende .qui{font-size:1.5vmin;color:var(--encre-douce)}
+  .legende .qui .nom{font-family:"Sacramento",cursive;color:var(--bordeaux);font-size:2.8vmin;margin-left:.6vmin;letter-spacing:0;font-variant:normal}
+  .attente{position:static;width:80vw}
+  @media (prefers-reduced-motion:reduce){.diapo{transition:none}}
 </style>
 </head>
 <body>
@@ -218,11 +194,15 @@ function precedent(){
 function suivant(){ clearTimeout(timer); afficher(prochain()); }
 function afficher(it){
   const cont = $('#diapos');
-  const ancien = cont.firstElementChild;
-  if (ancien) { ancien.classList.remove('visible'); ancien.classList.add('sortie'); setTimeout(() => ancien.remove(), 1500); }
+  // la pile : on garde les 3 dernières sous la nouvelle, assombries ; les plus anciennes s'effacent
+  [...cont.children].forEach((el, i, arr) => {
+    el.classList.add('dessous');
+    if (arr.length - i > 3) { el.classList.add('sortie'); setTimeout(() => el.remove(), 1300); }
+  });
   courant = it;
   const d = document.createElement('div'); d.className = 'diapo';
   if (!it) {
+    cont.innerHTML = '';
     d.innerHTML = `<div class="attente"><span class="script">Aude et Jérémie</span><span class="caps">Vos photos, vidéos et mots apparaîtront ici</span><span class="qr">famickael.github.io/mariage-souvenirs</span></div>`;
     cont.appendChild(d); requestAnimationFrame(() => d.classList.add('visible'));
     timer = setTimeout(suivant, 8000); return;
@@ -236,15 +216,13 @@ function afficher(it){
     const media = it.type === 'photo'
       ? `<img src="${it.urlImg || it.url}" alt="" onerror="this.onerror=null;this.src='${it.url}'">`
       : `<video src="${it.url}" autoplay muted playsinline></video>`;
-    d.innerHTML = nouveau + `<div class="cadre">
-        <svg class="fleurs" viewBox="0 0 368 368" aria-hidden="true">
-          <g stroke="var(--feuille)" stroke-width="1.2" fill="var(--feuille)" fill-opacity=".55"><path d="M60 70 q-30 10 -34 42 q30 -6 34 -42z"/><path d="M78 56 q-34 -6 -52 22 q32 8 52 -22z"/><path d="M300 300 q30 -10 34 -42 q-30 6 -34 42z"/><path d="M284 316 q34 6 52 -22 q-32 -8 -52 22z"/><path d="M200 338 q-28 -14 -58 0 q28 18 58 0z"/></g>
-          <g fill="var(--petale)" fill-opacity=".8"><circle cx="96" cy="44" r="12"/><circle cx="110" cy="52" r="9"/><circle cx="86" cy="56" r="8"/><circle cx="262" cy="324" r="12"/><circle cx="248" cy="316" r="9"/><circle cx="272" cy="312" r="8"/></g>
-        </svg>
-        <div class="octo"><div class="octo-inner"><div class="media">${media}</div></div></div>
-      </div>
-      <div class="legende">${it.texte ? `<div class="mot">${echap(it.texte)}</div>` : ''}<div class="qui caps">déposé par<span class="nom">${echap(it.nom)}</span></div></div>`;
-    if (it.texte) d.classList.add('avec-mot');
+    d.innerHTML = `<div class="cadre"><div class="media">${media}
+        <div class="legende">${it.texte ? `<div class="mot">${echap(it.texte)}</div>` : ''}<div class="qui caps">déposé par<span class="nom">${echap(it.nom)}</span></div></div>
+      </div></div>`;
+    // légère rotation et décalage aléatoires, comme une photo posée sur la table
+    d.style.setProperty('--rot', ((Math.random() * 4) - 2).toFixed(2) + 'deg');
+    d.style.setProperty('--dx', ((Math.random() * 3) - 1.5).toFixed(2) + 'vmin');
+    d.style.setProperty('--dy', ((Math.random() * 3) - 1.5).toFixed(2) + 'vmin');
     if (it.type === 'video') {
       const v = d.querySelector('video');
       v.addEventListener('ended', () => { if (!enPause) suivant(); });
