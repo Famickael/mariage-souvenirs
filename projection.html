@@ -94,6 +94,7 @@
   <div class="bandeau"><span class="script">Aude et Jérémie</span><span class="caps">famickael.github.io/mariage-souvenirs</span></div>
   <div id="aide">F plein écran · espace pause · ← → naviguer · V vidéos oui/non · R recharger</div>
   <div id="pause">Pause</div>
+  <div id="etat-cache"></div>
 </section>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -137,9 +138,12 @@ async function demarrer(){
 }
 
 /* ---------- données ---------- */
+const cache = new Map(); let octetsCache = 0;
 async function charger(){
-  const { data, error } = await sb.from('envois').select('*, fichiers(*)').order('created_at', { ascending: true });
-  if (error) { console.error(error); return; }
+  let data, error;
+  try { ({ data, error } = await sb.from('envois').select('*, fichiers(*)').order('created_at', { ascending: true })); }
+  catch (e) { error = e; }
+  if (error) { console.warn('hors ligne, on continue avec la mémoire', error.message || error); majEtatCache(items, true); return; }
   const liste = [];
   const fichiersImg = [];
   for (const e of data) {
@@ -161,16 +165,38 @@ async function charger(){
       try { const { data: d } = await sb.storage.from(CONFIG.BUCKET).createSignedUrl(i.chemin, 43200, { transform: { width: CONFIG.LARGEUR_IMAGE, quality: 80 } }); if (d) i.urlImg = d.signedUrl; } catch {}
     }
   }
+  // Mise en mémoire : chaque photo/vidéo est téléchargée une fois et conservée (blob) ; ensuite plus besoin de réseau.
+  for (const i of liste) {
+    if (cache.has(i.id)) { i.local = cache.get(i.id); continue; }
+    if (!i.url) continue;
+    try {
+      const src = i.type === 'photo' && i.urlImg ? i.urlImg : i.url;
+      let r = await fetch(src); if (!r.ok && i.urlImg) r = await fetch(i.url);
+      if (!r.ok) continue;
+      const b = await r.blob(); i.local = URL.createObjectURL(b); cache.set(i.id, i.local); octetsCache += b.size;
+    } catch (e) { console.warn('cache', i.chemin, e); }
+  }
+  majEtatCache(liste);
   const arrives = liste.filter(i => !connus.has(i.id));
   liste.forEach(i => connus.add(i.id));
-  items = liste;
+  // ne garder en projection que ce qui est en mémoire (ou atteignable en ligne)
+  items = liste.filter(i => i.local || navigator.onLine);
   if (premierChargement) { premierChargement = false; file = melanger(items); }
+  else if (!file.length && items.length) file = melanger(items);
   else if (arrives.length) { arrives.forEach(i => { i.nouveau = true; }); nouveaux.push(...arrives); }
   // retirer de la file ce qui n'est plus projetable
   const ids = new Set(items.map(i => i.id));
   file = file.filter(i => ids.has(i.id)).map(i => items.find(x => x.id === i.id));
 }
 
+function majEtatCache(liste, horsLigne){
+  const n = liste.filter(i => i.local).length, tot = liste.length;
+  const el = $('#etat-cache'); if (!el) return;
+  el.className = (horsLigne || !navigator.onLine) ? 'hors' : '';
+  el.textContent = `${n}/${tot} en mémoire (${(octetsCache/1048576).toFixed(0)} Mo)` + ((horsLigne || !navigator.onLine) ? ' · hors ligne, projection depuis la mémoire' : '');
+}
+window.addEventListener('offline', () => majEtatCache(items, true));
+window.addEventListener('online', () => { majEtatCache(items); charger(); });
 function melanger(a){ const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
 
 /* ---------- lecture ---------- */
@@ -214,8 +240,8 @@ function afficher(it){
     d.innerHTML = nouveau + `<div class="carton"><span class="guill">“</span><div class="texte">${echap(it.texte)}</div><span class="signature script">${echap(it.nom)}</span></div>`;
   } else {
     const media = it.type === 'photo'
-      ? `<img src="${it.urlImg || it.url}" alt="" onerror="this.onerror=null;this.src='${it.url}'">`
-      : `<video src="${it.url}" autoplay muted playsinline></video>`;
+      ? `<img src="${it.local || it.urlImg || it.url}" alt="" onerror="this.onerror=null;this.src='${it.url}'">`
+      : `<video src="${it.local || it.url}" autoplay muted playsinline></video>`;
     d.innerHTML = `<div class="cadre"><div class="media">${media}
         <div class="legende">${it.texte ? `<div class="mot">${echap(it.texte)}</div>` : ''}<div class="qui caps">déposé par<span class="nom">${echap(it.nom)}</span></div></div>
       </div></div>`;
