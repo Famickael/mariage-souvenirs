@@ -165,22 +165,14 @@ async function charger(){
       try { const { data: d } = await sb.storage.from(CONFIG.BUCKET).createSignedUrl(i.chemin, 43200, { transform: { width: CONFIG.LARGEUR_IMAGE, quality: 80 } }); if (d) i.urlImg = d.signedUrl; } catch {}
     }
   }
-  // Mise en mémoire : chaque photo/vidéo est téléchargée une fois et conservée (blob) ; ensuite plus besoin de réseau.
-  for (const i of liste) {
-    if (cache.has(i.id)) { i.local = cache.get(i.id); continue; }
-    if (!i.url) continue;
-    try {
-      const src = i.type === 'photo' && i.urlImg ? i.urlImg : i.url;
-      let r = await fetch(src); if (!r.ok && i.urlImg) r = await fetch(i.url);
-      if (!r.ok) continue;
-      const b = await r.blob(); i.local = URL.createObjectURL(b); cache.set(i.id, i.local); octetsCache += b.size;
-    } catch (e) { console.warn('cache', i.chemin, e); }
-  }
+  // Mise en mémoire en arrière-plan : la projection démarre tout de suite, les médias se téléchargent un par un.
+  liste.forEach(i => { if (cache.has(i.id)) i.local = cache.get(i.id); });
+  precharger(liste);
   majEtatCache(liste);
   const arrives = liste.filter(i => !connus.has(i.id));
   liste.forEach(i => connus.add(i.id));
   // ne garder en projection que ce qui est en mémoire (ou atteignable en ligne)
-  items = liste.filter(i => i.local || navigator.onLine);
+  items = liste;
   if (premierChargement) { premierChargement = false; file = melanger(items); }
   else if (!file.length && items.length) file = melanger(items);
   else if (arrives.length) { arrives.forEach(i => { i.nouveau = true; }); nouveaux.push(...arrives); }
@@ -189,6 +181,23 @@ async function charger(){
   file = file.filter(i => ids.has(i.id)).map(i => items.find(x => x.id === i.id));
 }
 
+let prechargeEnCours = false;
+async function precharger(liste){
+  if (prechargeEnCours) return; prechargeEnCours = true;
+  // photos d'abord (rapides), vidéos ensuite
+  const aFaire = [...liste.filter(i => i.type === 'photo'), ...liste.filter(i => i.type === 'video')].filter(i => !i.local && i.url);
+  for (const i of aFaire) {
+    try {
+      const src = i.type === 'photo' && i.urlImg ? i.urlImg : i.url;
+      let r = await fetch(src); if (!r.ok && i.urlImg) r = await fetch(i.url);
+      if (!r.ok) continue;
+      const b = await r.blob(); const u = URL.createObjectURL(b); cache.set(i.id, u); octetsCache += b.size;
+      const vivant = items.find(x => x.id === i.id); if (vivant) vivant.local = u; i.local = u;
+    } catch (e) { console.warn('cache', i.chemin, e); }
+    majEtatCache(items);
+  }
+  prechargeEnCours = false; majEtatCache(items);
+}
 function majEtatCache(liste, horsLigne){
   const n = liste.filter(i => i.local).length, tot = liste.length;
   const el = $('#etat-cache'); if (!el) return;
@@ -201,6 +210,7 @@ function melanger(a){ const b = [...a]; for (let i = b.length - 1; i > 0; i--) {
 
 /* ---------- lecture ---------- */
 function prochain(){
+  if (!navigator.onLine) { const enMem = file.filter(i => i.local); if (enMem.length && enMem.length < file.length) { file = enMem; position = -1; } }
   while (nouveaux.length) { const n = nouveaux.shift(); if (avecVideos || n.type !== 'video') { file.splice(position + 1, 0, n); return file[++position]; } }
   if (!file.length) return null;
   for (let k = 0; k < file.length; k++) {
